@@ -37,6 +37,12 @@
         @retry="handleRetry"
       />
 
+      <AISummaryPanel
+        v-if="videoInfo"
+        :video-info="videoInfo"
+        :url="url"
+      />
+
       <PlatformBar />
       <FeatureCards />
       <PricingSection />
@@ -64,6 +70,7 @@ import VideoResult from "./components/VideoResult.vue";
 import DownloadProgress from "./components/DownloadProgress.vue";
 import PricingSection from "./components/PricingSection.vue";
 import PlatformBar from "./components/PlatformBar.vue";
+import AISummaryPanel from "./components/AISummaryPanel.vue";
 
 const url = ref("");
 const parsing = ref(false);

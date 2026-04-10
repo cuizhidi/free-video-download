@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import asyncio
 import json
 import os
@@ -211,6 +214,14 @@ async def get_file(filename: str):
         filename=filename,
         media_type="application/octet-stream",
     )
+
+
+# ------------------------------------------------------------------
+# AI Routes (video summarization, chat, subtitles)
+# ------------------------------------------------------------------
+
+from ai_routes import router as ai_router  # noqa: E402
+app.include_router(ai_router)
 
 
 # ------------------------------------------------------------------

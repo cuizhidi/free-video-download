@@ -1,9 +1,9 @@
 # 免费视频下载工具 - 方案设计文档
 
-> 版本：v1.1  
+> 版本：v2.0  
 > 创建日期：2026-04-10  
-> 最后更新：2026-04-10  
-> 状态：已实现
+> 最后更新：2026-04-11  
+> 状态：已完成（视频下载 + AI 智能分析）
 
 ---
 
@@ -658,6 +658,222 @@ export default defineConfig({
 
 - 新增平台特殊处理：在 `PLATFORM_MAP` 中添加映射，在 `_normalize_video_info` 中添加分支
 - 新增平台专用模块（如抖音模式）：创建 `xxx_downloader.py`，在 `downloader.py` 的 `parse_video`/`download_video` 入口处添加路由判断
-- 新增 API：在 `app.py` 中添加路由函数
+- 新增 API：创建独立路由模块 `xxx_routes.py`，通过 `app.include_router()` 注册（遵循开闭原则）
 - 新增前端页面区块：创建 Vue 组件，在 `App.vue` 中引入
 - 新增下载策略：在 `download_video` 方法中扩展策略分支
+
+---
+
+## 七、AI 智能分析模块设计（v2.0）
+
+### 7.1 模块架构
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                        用户浏览器                                      │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │                    AISummaryPanel.vue                           │  │
+│  │  ┌──────────┬──────────┬──────────┬──────────┬──────────────┐  │  │
+│  │  │ 视频摘要  │ 章节大纲  │ 知识要点  │ 字幕文本  │ 思维导图 │AI问答│  │  │
+│  │  └──────────┴──────────┴──────────┴──────────┴──────────────┘  │  │
+│  └───────────────────────────┬────────────────────────────────────┘  │
+└──────────────────────────────┼──────────────────────────────────────┘
+                               │ HTTP / SSE
+┌──────────────────────────────┼──────────────────────────────────────┐
+│                          FastAPI 后端                                 │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                    ai_routes.py (APIRouter)                     │ │
+│  │  GET /api/ai/status     — AI 服务可用性检查                       │ │
+│  │  GET /api/ai/subtitle   — 字幕/转录提取                          │ │
+│  │  POST /api/ai/summarize — AI 内容总结 (SSE 流式)                  │ │
+│  │  POST /api/ai/chat      — AI 视频问答 (SSE 流式)                  │ │
+│  └──────────┬───────────────────────────┬────────────────────────┘ │
+│             │                           │                          │
+│  ┌──────────┴──────────┐   ┌───────────┴──────────┐               │
+│  │ subtitle_extractor.py│   │   ai_service.py       │               │
+│  │                      │   │                        │               │
+│  │ 1. yt-dlp 手动字幕    │   │ DeepSeek API 调用       │               │
+│  │ 2. yt-dlp 自动字幕    │   │ (OpenAI 兼容 SDK)       │               │
+│  │ 3. faster-whisper     │   │                        │               │
+│  │    语音识别（兜底）    │   │ - summarize_stream()   │               │
+│  └───────────────────────┘   │ - chat_stream()        │               │
+│                              └────────────────────────┘               │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │
+                          ┌─────────┴─────────┐
+                          │   DeepSeek API     │
+                          │ api.deepseek.com   │
+                          └────────────────────┘
+```
+
+### 7.2 AI API 接口设计
+
+#### 7.2.1 检查 AI 服务状态
+
+```
+GET /api/ai/status
+```
+
+**成功响应（200）：**
+
+```json
+{ "available": true }
+```
+
+#### 7.2.2 提取字幕/转录
+
+```
+GET /api/ai/subtitle?url={video_url}
+```
+
+**成功响应（200）：**
+
+```json
+{
+  "success": true,
+  "data": {
+    "segments": [
+      { "start": 0.0, "end": 5.2, "text": "大家好..." },
+      { "start": 5.2, "end": 10.1, "text": "今天我们..." }
+    ],
+    "full_text": "完整文本...",
+    "language": "zh",
+    "source": "subtitle"
+  }
+}
+```
+
+`source` 取值：`subtitle`（手动字幕）/ `auto_caption`（自动字幕）/ `whisper`（语音识别）
+
+#### 7.2.3 AI 内容总结（SSE 流式）
+
+```
+POST /api/ai/summarize
+Content-Type: application/json
+
+{
+  "transcript": "字幕全文...",
+  "title": "视频标题",
+  "language": "zh"
+}
+```
+
+**SSE 事件流：**
+
+```
+event: chunk
+data: {"content": "部分文本..."}
+
+event: done
+data: {"full_content": "完整JSON字符串"}
+
+event: error
+data: {"message": "错误信息"}
+```
+
+AI 返回的完整 JSON 结构：
+
+```json
+{
+  "summary": "200-300字视频摘要",
+  "chapters": [
+    { "title": "章节标题", "start_time": "00:00", "summary": "章节概括" }
+  ],
+  "key_points": [
+    { "point": "知识要点", "detail": "详细说明" }
+  ],
+  "mindmap": "# 主题\n## 子主题1\n### 要点1\n## 子主题2"
+}
+```
+
+#### 7.2.4 AI 视频问答（SSE 流式）
+
+```
+POST /api/ai/chat
+Content-Type: application/json
+
+{
+  "transcript": "字幕全文...",
+  "title": "视频标题",
+  "messages": [
+    { "role": "user", "content": "这个视频主要讲了什么？" }
+  ]
+}
+```
+
+**SSE 事件流：** 同总结接口。
+
+### 7.3 字幕提取模块设计（subtitle_extractor.py）
+
+**三级回退策略：**
+
+```
+输入 URL
+  │
+  ├── 抖音链接？
+  │     └── 是 → 直接跳到 faster-whisper 转录
+  │
+  └── 否 → yt-dlp 提取字幕
+        │
+        ├── 1. 手动字幕 (subtitles)
+        │     ├── 语言优先级: zh-Hans > zh > en > 任意
+        │     ├── 格式优先级: json3 > srv1 > vtt > srt
+        │     └── 成功 → 返回 segments
+        │
+        ├── 2. 自动字幕 (automatic_captions)
+        │     └── 同上策略
+        │
+        └── 3. 无字幕 → 下载音频 → faster-whisper 转录
+              ├── 模型: small, CPU, int8
+              ├── VAD 过滤静音片段
+              └── 返回带时间戳的 segments
+```
+
+**缓存策略：** 内存 LRU 缓存（OrderedDict），上限 50 条，同 URL 不重复提取。
+
+**faster-whisper 懒加载：** 模型仅在首次需要转录时加载，避免启动时占用内存（small 模型约 500MB）。
+
+### 7.4 AI 服务模块设计（ai_service.py）
+
+- 通过 OpenAI Python SDK 调用任意 OpenAI 兼容 API（默认 DeepSeek）
+- 通过环境变量 `AI_BASE_URL`、`AI_API_KEY`、`AI_MODEL`、`AI_MAX_TOKENS` 灵活配置
+- 向后兼容旧版 `DEEPSEEK_*` 环境变量
+- 已验证支持 DeepSeek、Ollama 本地模型、硅基流动、OpenRouter 等提供商
+- 总结使用 temperature=0.3（稳定性优先），问答使用 temperature=0.5（灵活性适中）
+- 转录文本超长时自动截取前 60000 字符（约 2 小时视频内容）
+- 使用 `httpx.Client(verify=False)` 绕过受限网络环境的 SSL 拦截
+- 新增 `test_api_connection()` 诊断函数，暴露为 `/api/ai/check` 端点
+
+### 7.5 前端 AI 组件架构
+
+```
+App.vue
+├── ... (原有组件不变)
+├── AISummaryPanel.vue           # AI 分析主面板（Tab 容器）
+│   ├── SummaryTab.vue           # 视频摘要（Markdown 渲染）
+│   ├── ChapterTab.vue           # 章节大纲（带时间戳卡片列表）
+│   ├── KeyPointsTab.vue         # 关键知识点（2列卡片网格）
+│   ├── TranscriptTab.vue        # 字幕文本（带时间戳 + 搜索）
+│   ├── MindmapTab.vue           # 思维导图（markmap SVG 渲染）
+│   └── AIChatTab.vue            # AI 问答（对话式 UI + 流式显示）
+└── ... (原有组件不变)
+```
+
+**前端新增依赖：**
+
+| 依赖 | 用途 |
+|------|------|
+| markmap-view | 思维导图 SVG 渲染引擎 |
+| markmap-lib | Markdown → mindmap 数据转换 |
+| marked | Markdown 渲染（用于摘要和问答内容） |
+
+### 7.6 环境变量
+
+| 变量名 | 必填 | 说明 |
+|--------|------|------|
+| AI_BASE_URL | 否 | AI API 基础地址（默认 `https://api.deepseek.com`） |
+| AI_API_KEY | 是（AI 功能） | AI API 密钥，未配置时 AI 功能不可用但不影响下载功能 |
+| AI_MODEL | 否 | 模型名称（默认 `deepseek-chat`） |
+| AI_MAX_TOKENS | 否 | 最大输出 token 数（默认 `4096`，推理模型建议 `16384`+） |
+
+> 向后兼容：若 `AI_*` 变量未设置，将自动回退读取 `DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、`DEEPSEEK_MODEL`。
