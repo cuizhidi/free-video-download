@@ -1,8 +1,10 @@
 # 免费视频下载工具 - 项目总结文档
 
-> 版本：v2.0  
+> 当前文档版本：v2.1（在 v2.0 基础上补充体验增强说明）  
 > 日期：2026-04-11  
-> 状态：已完成（视频下载 + AI 智能分析）
+> 状态：已完成（视频下载 + AI 智能分析 + AI 面板体验增强）
+
+版本与迭代说明见本文 **「已完成功能（v2.1）」** 及历史小节；与代码不同步时以仓库为准。
 
 ---
 
@@ -37,12 +39,20 @@
 | 字幕三级回退 | ✅ | 手动字幕 → 自动字幕 → faster-whisper 语音识别 |
 | 字幕缓存 | ✅ | 内存 LRU 缓存，避免重复提取 |
 
+### 已完成功能（v2.1 AI 面板体验增强）
+
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| Markdown 正文排版 | ✅ | `MarkdownProse.vue` 统一摘要与 AI 问答的标题/列表/代码块/表格等样式；`marked`（GFM）+ **DOMPurify** 消毒后渲染 |
+| 思维导图全屏 | ✅ | `MindmapTab.vue`：`Teleport` 全屏层、Esc / 关闭按钮、大屏独立 markmap 实例 |
+| 思维导图导出 | ✅ | `mindmapExport.js`：导出 **SVG**（矢量）与 **PNG**（高倍率 Canvas），文件名支持视频标题前缀 |
+| 字幕文件下载 | ✅ | `subtitleExport.js` + `TranscriptTab.vue`：由已有 `segments` 生成 **SRT / WebVTT** 并本地下载（与平台原始字幕文件字节级可能不一致） |
+
 ### 延期到 v3.0 的功能
 
 - 用户注册/登录系统
 - 批量下载 / 播放列表
 - 音频提取（MP3/M4A）
-- 字幕下载（SRT/VTT）
 - 下载次数限制与付费系统
 - 浏览器插件
 - AI 自定义 Prompt
@@ -93,8 +103,8 @@
 | 前端网络 | Fetch API + EventSource (SSE) | 浏览器原生，无额外依赖 |
 | AI 模型 | DeepSeek (deepseek-chat) | 通过 OpenAI 兼容 SDK 调用 |
 | 语音识别 | faster-whisper (small, CPU) | 无字幕视频的语音转录兜底方案 |
-| 思维导图 | markmap-view + markmap-lib | Markdown → 交互式 SVG 思维导图 |
-| Markdown 渲染 | marked | 摘要和问答内容的富文本渲染 |
+| 思维导图 | markmap-view + markmap-lib | Markdown → 交互式 SVG 思维导图；全屏与 SVG/PNG 导出见 v2.1 |
+| Markdown 渲染 | marked + dompurify | GFM 解析 + HTML 消毒 + `MarkdownProse` 组件化排版（摘要与问答） |
 
 ---
 
@@ -180,12 +190,13 @@ App.vue
 ├── VideoResult.vue           # 解析结果：封面 + 元信息 + 2列格式选择 + 下载按钮
 ├── DownloadProgress.vue      # 下载进度条 + 速度/ETA + 完成链接
 ├── AISummaryPanel.vue        # [v2.0 新增] AI 智能分析主面板
-│   ├── SummaryTab.vue        #   视频摘要（Markdown 渲染）
+│   ├── MarkdownProse.vue     #   [v2.1] 统一 Markdown 排版与安全渲染（摘要 / 问答复用）
+│   ├── SummaryTab.vue        #   视频摘要（经 MarkdownProse）
 │   ├── ChapterTab.vue        #   章节大纲（带时间戳卡片列表）
 │   ├── KeyPointsTab.vue      #   关键知识点（2列卡片网格）
-│   ├── TranscriptTab.vue     #   字幕文本（带时间戳 + 搜索）
-│   ├── MindmapTab.vue        #   思维导图（markmap SVG 渲染）
-│   └── AIChatTab.vue         #   AI 问答（对话式 UI + 流式显示）
+│   ├── TranscriptTab.vue     #   字幕文本（搜索 + [v2.1] 下载 SRT/VTT）
+│   ├── MindmapTab.vue        #   思维导图（markmap；[v2.1] 全屏 + 导出 SVG/PNG）
+│   └── AIChatTab.vue         #   AI 问答（流式 + MarkdownProse）
 ├── PlatformBar.vue           # 支持平台标签栏
 ├── FeatureCards.vue          # 功能亮点卡片
 ├── PricingSection.vue        # 免费/会员对比
@@ -249,12 +260,17 @@ free-video-download/
 │       ├── api/
 │       │   ├── index.js         # 后端 API 请求封装（下载相关）
 │       │   └── ai.js            # [v2.0] AI API 请求封装
+│       ├── utils/
+│       │   ├── markdownRender.js    # [v2.1] marked + DOMPurify
+│       │   ├── mindmapExport.js     # [v2.1] 思维导图 SVG/PNG 导出
+│       │   └── subtitleExport.js    # [v2.1] SRT/VTT 生成与下载
 │       └── components/
 │           ├── NavBar.vue       # 顶部导航栏
 │           ├── HeroSection.vue  # Hero 区
 │           ├── VideoResult.vue  # 视频解析结果
 │           ├── DownloadProgress.vue  # 下载进度
 │           ├── AISummaryPanel.vue    # [v2.0] AI 智能分析主面板
+│           ├── MarkdownProse.vue     # [v2.1] Markdown 排版组件
 │           ├── SummaryTab.vue        # [v2.0] 视频摘要
 │           ├── ChapterTab.vue        # [v2.0] 章节大纲
 │           ├── KeyPointsTab.vue      # [v2.0] 关键知识点
@@ -291,6 +307,13 @@ free-video-download/
 - 交互式 SVG，支持缩放、拖拽、折叠
 - 与 AI 输出的 Markdown 层级列表天然兼容
 - 无需后端参与，纯前端渲染
+
+**v2.1 补充**：全屏查看缓解小区域可读性问题；导出时克隆 SVG 并注入 `getStyleContent()`，PNG 通过 Canvas 放大绘制以满足高清位图需求。
+
+### 9.8 v2.1 字幕与 Markdown 安全
+
+- **字幕下载**：后端仍只返回结构化 `segments`；前端组装 SRT/VTT 即可覆盖 yt-dlp 字幕与 Whisper 转写，无需新增下载类 API。
+- **AI 输出 HTML**：使用 DOMPurify 降低 `v-html` 的 XSS 风险；排版与聊天共用同一渲染管线，避免两处样式漂移。
 
 ### 9.4 AI 模块的开闭原则设计
 

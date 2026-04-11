@@ -8,6 +8,14 @@
       <span class="meta-badge" v-if="language">
         {{ language }}
       </span>
+      <div class="download-actions">
+        <button type="button" class="dl-btn" @click="downloadSrt" title="下载 SRT 字幕文件">
+          下载 SRT
+        </button>
+        <button type="button" class="dl-btn" @click="downloadVtt" title="下载 WebVTT 字幕文件">
+          下载 VTT
+        </button>
+      </div>
       <div class="search-box">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
           <circle cx="11" cy="11" r="8"/>
@@ -49,12 +57,19 @@
 
 <script setup>
 import { ref, computed } from "vue";
+import {
+  segmentsToSrt,
+  segmentsToVtt,
+  sanitizeFilename,
+  downloadTextFile,
+} from "../utils/subtitleExport.js";
 
 const props = defineProps({
   segments: { type: Array, default: () => [] },
   source: { type: String, default: "" },
   language: { type: String, default: "" },
   loading: { type: Boolean, default: false },
+  videoTitle: { type: String, default: "" },
 });
 
 const searchQuery = ref("");
@@ -102,6 +117,30 @@ function escapeHtml(str) {
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
+
+function downloadSrt() {
+  if (!props.segments.length) return;
+  const base = sanitizeFilename(props.videoTitle, "subtitles");
+  const lang = (props.language || "").replace(/[/\\:*?"<>|]+/g, "");
+  const suffix = lang ? `_${lang}` : "";
+  downloadTextFile(
+    `${base}${suffix}.srt`,
+    segmentsToSrt(props.segments),
+    "text/plain;charset=utf-8"
+  );
+}
+
+function downloadVtt() {
+  if (!props.segments.length) return;
+  const base = sanitizeFilename(props.videoTitle, "subtitles");
+  const lang = (props.language || "").replace(/[/\\:*?"<>|]+/g, "");
+  const suffix = lang ? `_${lang}` : "";
+  downloadTextFile(
+    `${base}${suffix}.vtt`,
+    segmentsToVtt(props.segments),
+    "text/vtt;charset=utf-8"
+  );
+}
 </script>
 
 <style scoped>
@@ -111,6 +150,31 @@ function escapeRegex(str) {
   gap: 8px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+}
+
+.download-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dl-btn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.dl-btn:hover {
+  border-color: var(--accent-blue-border);
+  color: var(--accent-blue);
+  background: var(--accent-blue-light);
 }
 
 .meta-badge {

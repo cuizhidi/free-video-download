@@ -33,6 +33,8 @@
 - **语音识别**: faster-whisper（无字幕视频兜底方案）
 - **思维导图**: markmap-view + markmap-lib
 
+**版本与功能迭代说明**（含 v2.1 体验增强）：见 [docs/summary.md](docs/summary.md)。
+
 ## 快速启动
 
 ### 前置条件

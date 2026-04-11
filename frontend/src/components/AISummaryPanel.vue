@@ -68,11 +68,13 @@
             :source="subtitleData.source"
             :language="subtitleData.language"
             :loading="subtitleLoading"
+            :video-title="videoInfo?.title || ''"
           />
           <MindmapTab
             v-show="activeTab === 'mindmap'"
             :markdown="summaryData.mindmap"
             :loading="loading"
+            :export-basename="videoInfo?.title || 'mindmap'"
           />
           <AIChatTab
             v-show="activeTab === 'chat'"

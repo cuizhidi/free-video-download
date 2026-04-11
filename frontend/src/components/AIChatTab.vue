@@ -33,11 +33,12 @@
           <span v-else>AI</span>
         </div>
         <div class="msg-body">
-          <div
+          <MarkdownProse
             v-if="msg.role === 'assistant'"
             class="msg-content"
-            v-html="renderMarkdown(msg.content)"
-          ></div>
+            :source="msg.content"
+            compact
+          />
           <div v-else class="msg-content">{{ msg.content }}</div>
           <div v-if="msg.role === 'assistant' && msg.streaming" class="typing-indicator">
             <span></span><span></span><span></span>
@@ -72,8 +73,8 @@
 
 <script setup>
 import { ref, reactive, nextTick } from "vue";
-import { marked } from "marked";
 import { streamChat } from "../api/ai.js";
+import MarkdownProse from "./MarkdownProse.vue";
 
 const props = defineProps({
   transcript: { type: String, default: "" },
@@ -92,11 +93,6 @@ const streaming = ref(false);
 const messagesRef = ref(null);
 
 let currentController = null;
-
-function renderMarkdown(text) {
-  if (!text) return "";
-  return marked.parse(text, { breaks: true });
-}
 
 function handleSend() {
   if (!inputText.value.trim() || streaming.value) return;
@@ -288,23 +284,8 @@ async function scrollToBottom() {
   border-bottom-left-radius: 4px;
 }
 
-.message.assistant .msg-content :deep(p) {
-  margin-bottom: 8px;
-}
-
-.message.assistant .msg-content :deep(p:last-child) {
+.message.assistant .msg-content.md-prose :deep(p:last-child) {
   margin-bottom: 0;
-}
-
-.message.assistant .msg-content :deep(code) {
-  background: rgba(0, 0, 0, 0.06);
-  padding: 1px 5px;
-  border-radius: 3px;
-  font-size: 12px;
-}
-
-.message.assistant .msg-content :deep(strong) {
-  color: var(--accent-blue);
 }
 
 /* Typing indicator */

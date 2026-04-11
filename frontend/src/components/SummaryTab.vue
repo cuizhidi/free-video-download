@@ -5,23 +5,19 @@
       <span class="skeleton-block short"></span>
       <span class="skeleton-block"></span>
     </div>
-    <div v-else-if="content" class="summary-content" v-html="renderedContent"></div>
+    <div v-else-if="content" class="summary-content">
+      <MarkdownProse :source="content" />
+    </div>
     <div v-else class="tab-empty">暂无摘要内容</div>
   </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { marked } from "marked";
+import MarkdownProse from "./MarkdownProse.vue";
 
-const props = defineProps({
+defineProps({
   content: { type: String, default: "" },
   loading: { type: Boolean, default: false },
-});
-
-const renderedContent = computed(() => {
-  if (!props.content) return "";
-  return marked.parse(props.content, { breaks: true });
 });
 </script>
 
@@ -34,14 +30,6 @@ const renderedContent = computed(() => {
 
 .summary-content {
   padding: 4px 0;
-}
-
-.summary-content :deep(p) {
-  margin-bottom: 12px;
-}
-
-.summary-content :deep(strong) {
-  color: var(--accent-blue);
 }
 
 .tab-loading {
