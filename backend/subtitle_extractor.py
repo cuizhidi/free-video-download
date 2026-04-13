@@ -111,6 +111,7 @@ def _extract_ytdlp_subtitles(url: str) -> Optional[dict]:
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
+        "noplaylist": True,
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -308,6 +309,7 @@ def _download_audio(url: str) -> Path:
         "outtmpl": str(out_path),
         "quiet": True,
         "no_warnings": True,
+        "noplaylist": True,
         "postprocessors": [{
             "key": "FFmpegExtractAudio",
             "preferredcodec": "mp3",

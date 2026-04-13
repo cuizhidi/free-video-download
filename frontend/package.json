@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "dompurify": "^3.3.3",
+    "html-to-image": "^1.11.13",
     "marked": "^18.0.0",
     "markmap-lib": "^0.18.12",
     "markmap-view": "^0.18.12",

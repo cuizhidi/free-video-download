@@ -1,3 +1,5 @@
+import { toBlob } from "html-to-image";
+
 const PAD = 28;
 
 function buildExportSvgString(mm) {
@@ -47,9 +49,12 @@ export async function exportMindmapSvg(mm, filename = "mindmap.svg") {
 }
 
 /**
+ * Export mindmap as PNG using html-to-image which correctly handles
+ * SVG foreignObject elements (markmap renders text via foreignObject).
+ *
  * @param {import('markmap-view').Markmap} mm
  * @param {string} [filename]
- * @param {number} [pixelRatio] default: min(3, dpr * 2)
+ * @param {number} [pixelRatio]
  */
 export async function exportMindmapPng(mm, filename = "mindmap.png", pixelRatio) {
   if (!mm) return false;
@@ -60,49 +65,23 @@ export async function exportMindmapPng(mm, filename = "mindmap.png", pixelRatio)
   await mm.fit();
   await new Promise((r) => requestAnimationFrame(r));
 
-  const str = buildExportSvgString(mm);
-  const svgBlob = new Blob([str], { type: "image/svg+xml;charset=utf-8" });
-  const svgUrl = URL.createObjectURL(svgBlob);
+  const svgNode = mm.svg.node();
+  if (!svgNode) return false;
 
   try {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    const loaded = new Promise((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = () => reject(new Error("svg_image_load"));
+    const blob = await toBlob(svgNode, {
+      pixelRatio: pr,
+      backgroundColor: "#fefefe",
+      filter: (node) => {
+        if (node instanceof HTMLElement && node.tagName === "NOSCRIPT") return false;
+        return true;
+      },
     });
-    img.src = svgUrl;
-    await loaded;
-
-    const w = img.naturalWidth || img.width;
-    const h = img.naturalHeight || img.height;
-    if (!w || !h) {
-      URL.revokeObjectURL(svgUrl);
-      return false;
-    }
-
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.ceil(w * pr);
-    canvas.height = Math.ceil(h * pr);
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      URL.revokeObjectURL(svgUrl);
-      return false;
-    }
-    ctx.scale(pr, pr);
-    ctx.fillStyle = "#fefefe";
-    ctx.fillRect(0, 0, w, h);
-    ctx.drawImage(img, 0, 0, w, h);
-
-    const pngBlob = await new Promise((resolve) =>
-      canvas.toBlob((b) => resolve(b), "image/png")
-    );
-    URL.revokeObjectURL(svgUrl);
-    if (!pngBlob) return false;
-    triggerBlobDownload(pngBlob, filename);
+    if (!blob) return false;
+    triggerBlobDownload(blob, filename);
     return true;
-  } catch {
-    URL.revokeObjectURL(svgUrl);
+  } catch (e) {
+    console.warn("[mindmapExport] PNG export failed:", e);
     return false;
   }
 }

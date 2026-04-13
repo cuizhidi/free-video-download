@@ -33,9 +33,14 @@ class VideoDownloader:
             "no_warnings": True,
             "skip_download": True,
             "no_color": True,
+            "noplaylist": True,
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             raw_info = ydl.extract_info(url, download=False)
+        if raw_info.get("_type") == "playlist":
+            entries = raw_info.get("entries")
+            if entries:
+                raw_info = next(iter(entries))
         return self._normalize_video_info(raw_info)
 
     def download_video(self, url: str, format_id: str, progress_hook=None) -> str:
@@ -51,6 +56,7 @@ class VideoDownloader:
             "quiet": True,
             "no_warnings": True,
             "merge_output_format": "mp4",
+            "noplaylist": True,
         }
         if progress_hook:
             ydl_opts["progress_hooks"] = [progress_hook]

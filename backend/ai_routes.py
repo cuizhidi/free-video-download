@@ -61,17 +61,46 @@ async def ai_check():
 
 @router.get("/subtitle")
 async def get_subtitle(url: str = Query(..., description="Video page URL")):
-    """Extract subtitle / transcript for a video."""
-    try:
+    """Extract subtitle / transcript for a video (SSE with heartbeats).
+
+    Whisper transcription for long videos can take 5-20+ minutes.
+    Regular HTTP would timeout via proxies / browsers, so we stream
+    periodic heartbeat events to keep the connection alive.
+    """
+
+    async def event_stream():
         loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(None, extract_subtitle, url)
-        return {"success": True, "data": result}
-    except Exception as e:
-        logger.exception("Subtitle extraction failed")
-        raise HTTPException(
-            status_code=500,
-            detail={"success": False, "error": f"字幕提取失败: {str(e)[:200]}"},
-        )
+        queue: asyncio.Queue = asyncio.Queue()
+
+        def _run():
+            try:
+                result = extract_subtitle(url)
+                loop.call_soon_threadsafe(queue.put_nowait, ("done", result))
+            except Exception as e:
+                logger.exception("Subtitle extraction failed")
+                loop.call_soon_threadsafe(
+                    queue.put_nowait, ("error", f"字幕提取失败: {str(e)[:200]}")
+                )
+
+        loop.run_in_executor(None, _run)
+
+        while True:
+            try:
+                event_type, data = await asyncio.wait_for(queue.get(), timeout=10)
+                if event_type == "done":
+                    yield _sse("done", {"success": True, "data": data})
+                    break
+                elif event_type == "error":
+                    yield _sse("error", {"success": False, "error": data})
+                    break
+            except asyncio.TimeoutError:
+                yield _sse("heartbeat", {})
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.post("/summarize")

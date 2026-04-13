@@ -1,10 +1,10 @@
 # 免费视频下载工具 - 项目总结文档
 
-> 当前文档版本：v2.1（在 v2.0 基础上补充体验增强说明）  
-> 日期：2026-04-11  
-> 状态：已完成（视频下载 + AI 智能分析 + AI 面板体验增强）
+> 当前文档版本：v2.2（在 v2.1 基础上修复若干稳定性与兼容性问题）  
+> 日期：2026-04-13  
+> 状态：已完成（视频下载 + AI 智能分析 + AI 面板体验增强 + 稳定性修复）
 
-版本与迭代说明见本文 **「已完成功能（v2.1）」** 及历史小节；与代码不同步时以仓库为准。
+版本与迭代说明见本文 **「已完成功能（v2.2）」** 及历史小节；与代码不同步时以仓库为准。
 
 ---
 
@@ -47,6 +47,15 @@
 | 思维导图全屏 | ✅ | `MindmapTab.vue`：`Teleport` 全屏层、Esc / 关闭按钮、大屏独立 markmap 实例 |
 | 思维导图导出 | ✅ | `mindmapExport.js`：导出 **SVG**（矢量）与 **PNG**（高倍率 Canvas），文件名支持视频标题前缀 |
 | 字幕文件下载 | ✅ | `subtitleExport.js` + `TranscriptTab.vue`：由已有 `segments` 生成 **SRT / WebVTT** 并本地下载（与平台原始字幕文件字节级可能不一致） |
+
+### 已完成功能（v2.2 稳定性修复）
+
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| 播放列表 URL 兼容 | ✅ | `downloader.py` 和 `subtitle_extractor.py` 添加 `noplaylist: True`，防止 yt-dlp 展开整个播放列表导致解析超时 |
+| AI 摘要 Markdown 格式化 | ✅ | 更新 `ai_service.py` 系统提示词，显式要求 AI 在 summary 字段使用 `## 标题`、`**加粗**`、`- 列表` 等 Markdown 语法 |
+| 思维导图 PNG 导出修复 | ✅ | 引入 `html-to-image` 替换 Canvas 管线，正确处理 markmap 的 `<foreignObject>` 元素，解决空白/截断问题 |
+| 字幕提取超时修复 | ✅ | `/api/ai/subtitle` 改为 SSE 流式端点，每 10 秒发送心跳保活，配合前端 SSE 消费与 Vite 代理超时延长至 10 分钟，解决 `faster-whisper` 长时转录导致连接断开的问题 |
 
 ### 延期到 v3.0 的功能
 
@@ -164,7 +173,7 @@
 | `/api/proxy-image?url=` | GET | 代理加载图片，绕过 Referer 限制 |
 | `/api/ai/status` | GET | 检查 AI 服务可用性（API Key 是否配置） |
 | `/api/ai/check` | GET | AI API 连通性诊断（配置 + 实际调用测试） |
-| `/api/ai/subtitle?url=` | GET | 提取视频字幕/转录文本 |
+| `/api/ai/subtitle?url=` | GET | 提取视频字幕/转录文本（v2.2 改为 SSE 流式，含心跳保活） |
 | `/api/ai/summarize` | POST | AI 视频内容总结（SSE 流式） |
 | `/api/ai/chat` | POST | AI 视频问答（SSE 流式） |
 
@@ -220,12 +229,13 @@ App.vue
 
 ## 七、测试记录
 
-### 平台测试结果（2026-04-10）
+### 平台测试结果（2026-04-13 更新）
 
 | 平台 | 测试链接格式 | 解析 | 下载 | 备注 |
 |------|-------------|------|------|------|
 | YouTube | youtube.com/watch?v= | ✅ | ✅ | 多格式，需合并时走 ffmpeg |
-| Bilibili | bilibili.com/video/BV | ✅ | ✅ | 海外访问部分视频受地区限制 |
+| YouTube（播放列表URL） | youtube.com/watch?v=…&list=…&index= | ✅ | ✅ | v2.2 修复：`noplaylist` 防止展开播放列表 |
+| Bilibili | bilibili.com/video/BV | ✅ | ✅ | 海外访问部分视频受地区限制；AI 分析已验证长音频转录保活 |
 | 抖音（长链接） | www.douyin.com/video/ | ✅ | ✅ | 专用模块，无水印 |
 | 抖音（移动分享） | m.douyin.com/share/video/ | ✅ | ✅ | 专用模块 |
 | 抖音（短链接） | v.douyin.com/ | ⚠️ | - | 短链接过期会提示 |
@@ -308,7 +318,7 @@ free-video-download/
 - 与 AI 输出的 Markdown 层级列表天然兼容
 - 无需后端参与，纯前端渲染
 
-**v2.1 补充**：全屏查看缓解小区域可读性问题；导出时克隆 SVG 并注入 `getStyleContent()`，PNG 通过 Canvas 放大绘制以满足高清位图需求。
+**v2.1 补充**：全屏查看缓解小区域可读性问题；SVG 导出时克隆 SVG 并注入 `getStyleContent()`。**v2.2 补充**：PNG 导出改用 `html-to-image` 的 `toBlob()`，解决 Canvas 对 `<foreignObject>` 的安全限制。
 
 ### 9.8 v2.1 字幕与 Markdown 安全
 
@@ -354,3 +364,34 @@ v2.0 的 AI 后端被重构为**通用 OpenAI 兼容层**，通过环境变量�
 ### 9.7 `/api/ai/check` 连通性诊断
 
 新增 `GET /api/ai/check` 端点，返回 AI API 的配置信息和实际连通性测试结果，方便快速排查网络/密钥/余额等问题。
+
+---
+
+## 十、v2.2 稳定性修复技术说明
+
+### 10.1 播放列表 URL 兼容
+
+YouTube 等平台的视频 URL 常携带 `list=` 和 `index=` 参数。yt-dlp 默认会展开整个播放列表进行解析，导致单视频解析/下载超时。
+
+**解决方案**：在 `downloader.py` 和 `subtitle_extractor.py` 的所有 yt-dlp 调用中添加 `"noplaylist": True`，确保只处理目标视频。同时在 `downloader.py` 中增加了 `_type == "playlist"` 的兜底处理，从 entries 中取出第一个条目。
+
+### 10.2 AI 摘要 Markdown 格式化
+
+v2.1 的 `MarkdownProse.vue` 组件已具备完整的 Markdown 渲染能力，但 AI 返回的 `summary` 字段是纯文本，导致排版效果不佳。
+
+**解决方案**：更新 `ai_service.py` 中的系统提示词，明确要求 AI 使用 `## 标题`、`**加粗**`、`- 列表` 等 Markdown 语法输出摘要，并提供了示例结构，同时将字数要求调整为 200-400 字。
+
+### 10.3 思维导图 PNG 导出修复
+
+原方案通过 SVG → Image → Canvas → PNG 管线导出，但 markmap 使用 `<foreignObject>` 渲染文本，浏览器出于安全策略会阻止 Canvas 绘制含 `<foreignObject>` 的 SVG，导致导出图片空白。
+
+**解决方案**：引入 `html-to-image` 库，直接对 SVG DOM 节点调用 `toBlob()`，绕过 Canvas 安全限制，正确捕获包含 `<foreignObject>` 的完整渲染内容。
+
+### 10.4 字幕提取 SSE 心跳保活
+
+`faster-whisper` 在 CPU 模式下转录较长音频（如 55MB 的 Bilibili 视频）可能耗时 4-5 分钟以上，超出浏览器 `fetch` 和 Vite 开发代理的默认超时（约 120 秒），导致前端收不到响应。
+
+**解决方案（三层防护）**：
+1. **后端 SSE**：`/api/ai/subtitle` 改为 SSE 流式端点，在后台线程中执行转录，主协程每 10 秒发送 `heartbeat` 事件保持连接，转录完成后发送 `done` 事件携带完整字幕数据
+2. **前端 SSE 消费**：`extractSubtitle()` 使用 `ReadableStreamDefaultReader` 逐块读取 SSE 流，跳过心跳、提取最终结果
+3. **代理超时**：Vite 开发代理的 `timeout` 和 `proxyTimeout` 设为 600000ms（10 分钟）作为安全兜底

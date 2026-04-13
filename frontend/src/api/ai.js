@@ -11,6 +11,7 @@ export async function checkAIStatus() {
 
 /**
  * Extract subtitle / transcript for a video URL.
+ * The backend streams SSE with heartbeats to survive long whisper runs.
  */
 export async function extractSubtitle(url) {
   const res = await fetch(
@@ -22,7 +23,39 @@ export async function extractSubtitle(url) {
       err?.detail?.error || err?.detail || "字幕提取失败，请稍后重试"
     );
   }
-  return res.json();
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const parts = buffer.split("\n");
+    buffer = parts.pop() || "";
+
+    for (const line of parts) {
+      if (!line.startsWith("data: ")) continue;
+      const raw = line.slice(6);
+      if (!raw || raw === "{}") continue;
+
+      let payload;
+      try {
+        payload = JSON.parse(raw);
+      } catch {
+        continue;
+      }
+
+      if (payload.success === true) return payload;
+      if (payload.success === false) {
+        throw new Error(payload.error || "字幕提取失败");
+      }
+    }
+  }
+
+  throw new Error("字幕提取流意外结束");
 }
 
 /**
