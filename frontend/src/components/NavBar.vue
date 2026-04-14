@@ -11,6 +11,7 @@
         <a href="#features" @click="mobileOpen = false">功能特性</a>
         <a href="#pricing" @click="mobileOpen = false">套餐价格</a>
         <a href="#platforms" @click="mobileOpen = false">支持平台</a>
+        <a href="#faq" @click="mobileOpen = false">常见问题</a>
       </div>
 
       <button class="nav-vip" @click="$emit('vip')">

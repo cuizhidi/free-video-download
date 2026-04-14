@@ -1,9 +1,57 @@
 # SaveAny - 万能视频下载总结器
 # https://maxczd.com
 
+# 默认规则：允许所有搜索引擎爬虫
 User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /downloads/
 
+# === AI 搜索与检索爬虫（明确允许，提升 AI 对话可见性）===
+
+# OpenAI ChatGPT 实时搜索
+User-agent: ChatGPT-User
+Allow: /
+
+# OpenAI 搜索引擎
+User-agent: OAI-SearchBot
+Allow: /
+
+# OpenAI 训练爬虫（允许以增加模型对产品的认知）
+User-agent: GPTBot
+Allow: /
+
+# Anthropic Claude 爬虫
+User-agent: ClaudeBot
+Allow: /
+
+# Anthropic Claude Web 搜索
+User-agent: anthropic-ai
+Allow: /
+
+# Perplexity AI 搜索引擎
+User-agent: PerplexityBot
+Allow: /
+
+# Google Gemini AI
+User-agent: Google-Extended
+Allow: /
+
+# Apple Intelligence
+User-agent: Applebot-Extended
+Allow: /
+
+# Meta AI
+User-agent: FacebookBot
+Allow: /
+
+# Microsoft Copilot / Bing AI
+User-agent: Bingbot
+Allow: /
+
+# 字节跳动 豆包/Coze
+User-agent: Bytespider
+Allow: /
+
+# 网站地图与 AI 文档
 Sitemap: https://maxczd.com/sitemap.xml

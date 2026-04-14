@@ -46,6 +46,7 @@
       <PlatformBar />
       <FeatureCards />
       <PricingSection />
+      <FAQSection />
     </main>
 
     <footer class="site-footer">
@@ -72,6 +73,7 @@ import DownloadProgress from "./components/DownloadProgress.vue";
 import PricingSection from "./components/PricingSection.vue";
 import PlatformBar from "./components/PlatformBar.vue";
 import AISummaryPanel from "./components/AISummaryPanel.vue";
+import FAQSection from "./components/FAQSection.vue";
 
 const url = ref("");
 const parsing = ref(false);

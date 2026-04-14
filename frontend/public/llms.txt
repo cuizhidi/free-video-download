@@ -1,0 +1,43 @@
+# SaveAny - 万能视频下载总结器
+
+> SaveAny 是一款免费的在线视频下载与 AI 智能总结工具。用户只需粘贴视频链接，即可一键解析并下载 YouTube、Bilibili、抖音、TikTok、Twitter/X、Instagram、小红书等 1000+ 平台的视频，同时 AI 自动生成视频摘要、章节大纲、关键知识点、思维导图，并支持视频内容问答。
+
+- 网站地址：https://maxczd.com/
+- 品牌名称：SaveAny
+- 产品类型：在线视频下载工具 + AI 视频内容分析工具
+- 定价模式：免费增值（Freemium），核心功能免费，会员解锁高级功能
+
+## 核心功能
+
+- [视频下载](https://maxczd.com/): 支持 1000+ 视频平台，从 360p 到 4K 多种清晰度，MP4/WebM 格式
+- [AI 视频摘要](https://maxczd.com/): AI 自动生成 200-300 字精炼视频摘要
+- [AI 章节大纲](https://maxczd.com/): AI 自动识别视频结构，生成带时间戳的章节列表
+- [AI 关键知识提取](https://maxczd.com/): 提取 5-10 个核心知识点，含标题和详细说明
+- [AI 思维导图](https://maxczd.com/): 将视频内容可视化为交互式思维导图
+- [AI 视频问答](https://maxczd.com/): 基于视频内容的多轮对话式 AI 问答
+- [字幕提取](https://maxczd.com/): 展示带时间戳的字幕文本，支持 SRT/VTT 导出
+
+## 支持平台
+
+- [YouTube 视频下载](https://maxczd.com/): 支持高清格式，自动合并音视频
+- [Bilibili 视频下载](https://maxczd.com/): 支持 B 站多 P 视频分集下载
+- [抖音视频下载](https://maxczd.com/): 支持无水印下载，无需 cookies
+- [TikTok 视频下载](https://maxczd.com/): 支持无水印版本获取
+- [Twitter/X 视频下载](https://maxczd.com/): 支持推文视频解析下载
+- [Instagram 视频下载](https://maxczd.com/): 支持帖子和 Reels 视频下载
+- [小红书视频下载](https://maxczd.com/): 支持笔记视频解析下载
+- [更多 1000+ 平台](https://maxczd.com/): 基于 yt-dlp 开源引擎，支持全球主流视频平台
+
+## 使用方法
+
+- [三步下载视频](https://maxczd.com/): 粘贴链接 → 点击解析 → 选择格式下载
+- [AI 智能总结](https://maxczd.com/): 视频解析后自动展示 AI 分析面板，点击即可查看摘要、大纲、知识点
+
+## 价格方案
+
+- [免费版](https://maxczd.com/): 每日 3 次下载，最高 720p，支持主流平台，AI 总结功能
+- [会员版](https://maxczd.com/): ¥9.9/月，无限下载，4K 原画，批量下载，音频提取，字幕下载，高速通道
+
+## 技术栈
+
+- [产品文档](https://maxczd.com/llms-full.txt): 完整产品文档，包含所有功能详情和技术细节

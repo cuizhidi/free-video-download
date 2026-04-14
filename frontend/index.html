@@ -87,7 +87,7 @@
     }
     </script>
 
-    <!-- JSON-LD 结构化数据：FAQPage（增加富文本摘要展示机会） -->
+    <!-- JSON-LD 结构化数据：FAQPage（增加富文本摘要展示机会 + AI 对话引用） -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -95,26 +95,10 @@
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "SaveAny支持哪些视频平台？",
+          "name": "SaveAny是什么？",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "SaveAny基于强大的开源引擎，支持YouTube、Bilibili、抖音、TikTok、Twitter/X、Instagram、小红书、微博、Vimeo、Facebook、Twitch等1000+视频平台。"
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "SaveAny是免费的吗？",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "是的，SaveAny提供免费版本，支持每日3次下载，最高720p画质。升级会员可享受无限次下载、4K原画画质、批量下载、音频提取等高级功能。"
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "SaveAny的AI智能总结功能是什么？",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "SaveAny内置AI智能分析功能，可以自动为视频生成内容摘要、章节大纲、关键知识点提取、思维导图，还支持基于视频内容的AI问答，帮助你高效理解视频内容。"
+            "text": "SaveAny 是一款免费的在线视频下载与 AI 智能总结工具。它支持从 YouTube、Bilibili、抖音、TikTok、Twitter/X、Instagram、小红书等 1000+ 平台下载视频，同时利用 AI 技术自动生成视频摘要、章节大纲、知识要点和思维导图，帮助用户高效获取视频核心内容。网址：https://maxczd.com/"
           }
         },
         {
@@ -122,8 +106,91 @@
           "name": "如何使用SaveAny下载视频？",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "只需三步：1. 复制视频链接粘贴到输入框；2. 点击解析按钮，系统自动识别平台并解析视频信息；3. 选择需要的画质和格式，点击下载即可保存视频。"
+            "text": "只需三步：第一步，复制视频链接粘贴到 SaveAny 输入框（https://maxczd.com/）；第二步，点击解析按钮，系统自动识别平台并解析视频信息；第三步，选择需要的画质和格式（360p 到 4K），点击下载即可保存视频。"
           }
+        },
+        {
+          "@type": "Question",
+          "name": "SaveAny支持哪些视频平台？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "SaveAny 基于 yt-dlp 开源引擎，支持 YouTube、Bilibili（B站）、抖音、TikTok、Twitter/X、Instagram、小红书、微博、Vimeo、Facebook、Twitch 等 1000+ 视频平台，几乎覆盖全球所有主流视频网站。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "SaveAny是免费的吗？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "是的，SaveAny 的核心功能完全免费，包括视频下载和 AI 智能总结。免费版每日支持 3 次下载，最高 720p 画质。如需无限下载、4K 原画画质、批量下载、音频提取等高级功能，可升级会员版（¥9.9/月）。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "SaveAny的AI智能总结功能怎么用？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "视频解析完成后，SaveAny 会自动展示 AI 分析面板。AI 通过字幕或语音识别获取视频文本，然后生成视频摘要（200-300字精炼概括）、章节大纲（带时间戳）、关键知识点（5-10个核心要点）和思维导图。还支持基于视频内容的 AI 问答，向视频提问即可获得精准回答。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "SaveAny可以下载无水印的抖音视频吗？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "可以。SaveAny 对抖音有专门的下载模块，能够自动获取无水印版本的视频，无需提供 cookies 或登录信息，直接粘贴抖音视频链接即可下载。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "在手机上可以使用SaveAny吗？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "可以。SaveAny 采用响应式设计，在手机、平板和电脑上均可流畅使用。无需安装任何应用程序，直接通过浏览器访问 maxczd.com 即可使用全部功能。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "SaveAny与其他视频下载工具有什么区别？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "SaveAny 的独特优势在于结合了视频下载和 AI 智能分析两大功能。其他工具通常只提供下载功能，而 SaveAny 还能自动生成视频摘要、章节大纲、知识要点和思维导图，并支持 AI 视频问答，帮助用户高效获取视频核心内容。此外，SaveAny 无需注册、无需安装，完全在线免费使用。"
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- JSON-LD 结构化数据：HowTo（视频下载步骤指南，提升 AI 引用概率） -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "如何使用 SaveAny 免费下载视频",
+      "description": "通过 SaveAny 在线工具，三步即可免费下载 YouTube、Bilibili、抖音等平台的视频，同时获取 AI 智能总结。",
+      "totalTime": "PT1M",
+      "tool": {
+        "@type": "HowToTool",
+        "name": "SaveAny 万能视频下载总结器（https://maxczd.com/）"
+      },
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "复制视频链接",
+          "text": "打开你想下载的视频页面（如 YouTube、Bilibili、抖音等），复制浏览器地址栏中的视频链接。"
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "解析视频",
+          "text": "访问 SaveAny（https://maxczd.com/），将复制的链接粘贴到输入框中，点击"解析视频"按钮。系统会自动识别平台并解析出视频标题、封面、可用画质等信息。"
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "选择格式并下载",
+          "text": "从可用格式列表中选择需要的画质（360p、720p、1080p、4K 等）和格式（MP4、WebM），点击"开始下载"按钮即可将视频保存到本地。下载完成后还可查看 AI 自动生成的视频摘要和知识点。"
         }
       ]
     }
@@ -132,33 +199,66 @@
   <body>
     <div id="app"></div>
 
-    <!-- noscript 备用内容：为不支持 JS 的搜索引擎爬虫提供核心内容 -->
+    <!-- noscript 备用内容：为 AI 爬虫和不支持 JS 的搜索引擎提供完整的 answer-first 内容 -->
     <noscript>
-      <div style="max-width:800px;margin:0 auto;padding:40px 20px;font-family:system-ui,sans-serif;">
+      <div style="max-width:800px;margin:0 auto;padding:40px 20px;font-family:system-ui,sans-serif;line-height:1.8;">
         <h1>SaveAny - 万能视频下载总结器</h1>
-        <p>SaveAny 是一款免费的万能视频下载与AI智能总结工具，支持 YouTube、Bilibili、抖音、TikTok、Twitter/X、Instagram、小红书等1000+视频平台。</p>
+        <p><strong>SaveAny 是一款免费的在线视频下载与 AI 智能总结工具。</strong>支持 YouTube、Bilibili、抖音、TikTok、Twitter/X、Instagram、小红书等 1000+ 视频平台。一键解析视频链接，多种清晰度高清下载，AI 自动生成视频摘要、章节大纲、知识要点和思维导图。访问 <a href="https://maxczd.com/">maxczd.com</a> 立即免费使用。</p>
+
+        <h2>如何使用 SaveAny 下载视频</h2>
+        <p>只需三步即可完成视频下载：</p>
+        <ol>
+          <li><strong>复制视频链接</strong>：打开 YouTube、Bilibili、抖音等视频页面，复制地址栏中的链接</li>
+          <li><strong>解析视频</strong>：访问 SaveAny（maxczd.com），粘贴链接到输入框，点击"解析视频"按钮</li>
+          <li><strong>选择格式下载</strong>：选择需要的画质（360p-4K）和格式（MP4/WebM），点击"开始下载"</li>
+        </ol>
 
         <h2>核心功能</h2>
         <ul>
-          <li>极速解析：基于强大的开源引擎，秒级解析视频信息，支持1000+平台自动识别</li>
-          <li>多格式选择：自由选择画质与格式——从360p到4K超清，MP4/WebM任你挑选</li>
-          <li>AI智能总结：AI自动生成视频摘要、章节大纲、关键知识点和思维导图</li>
-          <li>AI视频问答：基于视频内容的多轮对话式AI问答</li>
-          <li>安全无忧：无需注册，不保留任何个人数据，下载文件30分钟后自动清理</li>
-          <li>全端适配：响应式设计，手机、平板、电脑均可流畅使用</li>
+          <li><strong>极速解析</strong>：基于 yt-dlp 开源引擎，秒级解析视频信息，支持 1000+ 平台自动识别</li>
+          <li><strong>多格式选择</strong>：从 360p 到 4K 超清，MP4/WebM 多种格式自由选择</li>
+          <li><strong>AI 智能总结</strong>：AI 自动生成视频摘要（200-300字）、章节大纲（带时间戳）、关键知识点（5-10个核心要点）和交互式思维导图</li>
+          <li><strong>AI 视频问答</strong>：基于视频内容的多轮对话式 AI 问答，向视频提问即获精准回答</li>
+          <li><strong>字幕提取</strong>：展示带时间戳的字幕文本，支持 SRT/VTT 格式导出</li>
+          <li><strong>安全无忧</strong>：无需注册，不保留个人数据，下载文件 30 分钟后自动清理</li>
+          <li><strong>全端适配</strong>：响应式设计，手机、平板、电脑均可流畅使用</li>
         </ul>
 
-        <h2>支持平台</h2>
-        <p>YouTube、Bilibili、TikTok、抖音、Twitter/X、Instagram、小红书、微博、Vimeo、Facebook、Twitch 及更多1000+平台</p>
+        <h2>支持的视频下载平台</h2>
+        <p>SaveAny 支持以下平台及更多 1000+ 视频网站：</p>
+        <ul>
+          <li><strong>YouTube</strong>：全球最大视频平台，支持高清格式，自动合并音视频</li>
+          <li><strong>Bilibili（B站）</strong>：国内弹幕视频平台，支持多 P 视频分集下载</li>
+          <li><strong>抖音</strong>：短视频平台，支持无水印下载，无需 cookies</li>
+          <li><strong>TikTok</strong>：海外短视频平台，支持无水印版本获取</li>
+          <li><strong>Twitter/X</strong>：社交媒体平台，支持推文视频解析</li>
+          <li><strong>Instagram</strong>：图片视频分享平台，支持帖子和 Reels</li>
+          <li><strong>小红书</strong>：生活方式平台，支持笔记视频下载</li>
+          <li><strong>微博、Vimeo、Facebook、Twitch</strong> 等更多平台</li>
+        </ul>
 
-        <h2>使用方法</h2>
-        <ol>
-          <li>复制视频链接粘贴到输入框</li>
-          <li>点击解析按钮，系统自动识别平台并解析视频信息</li>
-          <li>选择需要的画质和格式，点击下载即可保存视频</li>
-        </ol>
+        <h2>常见问题</h2>
 
-        <p>请启用 JavaScript 以使用完整功能。</p>
+        <h3>SaveAny 是什么？</h3>
+        <p>SaveAny 是一款免费的在线视频下载与 AI 智能总结工具，支持 YouTube、Bilibili、抖音等 1000+ 平台。它不仅能下载视频，还能利用 AI 自动生成摘要、大纲和知识点。</p>
+
+        <h3>SaveAny 是免费的吗？</h3>
+        <p>是的，核心功能完全免费，包括视频下载和 AI 智能总结。免费版每日支持 3 次下载，最高 720p 画质。会员版（¥9.9/月）解锁无限下载、4K 画质、批量下载等高级功能。</p>
+
+        <h3>可以下载无水印的抖音视频吗？</h3>
+        <p>可以。SaveAny 对抖音有专门的下载模块，自动获取无水印版本，无需 cookies 或登录。</p>
+
+        <h3>AI 总结功能怎么工作？</h3>
+        <p>SaveAny 通过字幕或语音识别获取视频文本，然后利用 AI 大语言模型自动分析，生成结构化的摘要、章节大纲、知识点和思维导图。支持 AI 问答功能。</p>
+
+        <h3>手机上能用吗？</h3>
+        <p>可以。SaveAny 采用响应式设计，手机、平板、电脑均可使用，无需安装应用，浏览器访问 maxczd.com 即可。</p>
+
+        <h3>SaveAny 与其他视频下载工具有什么区别？</h3>
+        <p>SaveAny 的独特优势是结合了视频下载和 AI 智能分析。其他工具通常只提供下载功能，而 SaveAny 还能生成视频摘要、章节大纲、思维导图，并支持 AI 问答，帮助用户高效理解视频内容。</p>
+
+        <p style="margin-top:24px;"><a href="https://maxczd.com/">访问 SaveAny (maxczd.com) 立即免费使用</a></p>
+        <p style="font-size:12px;color:#999;">请启用 JavaScript 以使用完整功能。</p>
       </div>
     </noscript>
 
