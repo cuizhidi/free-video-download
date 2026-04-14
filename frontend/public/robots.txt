@@ -1,0 +1,9 @@
+# SaveAny - 万能视频下载总结器
+# https://maxczd.com
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /downloads/
+
+Sitemap: https://maxczd.com/sitemap.xml

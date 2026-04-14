@@ -1,8 +1,8 @@
 <template>
   <section id="platforms" class="platforms">
     <div class="container">
-      <h2 class="section-title">支持平台</h2>
-      <p class="section-subtitle">基于强大开源引擎，支持 1000+ 视频网站</p>
+      <h2 class="section-title">支持的视频下载平台</h2>
+      <p class="section-subtitle">基于强大开源引擎，支持 1000+ 视频网站在线下载与 AI 总结</p>
 
       <div class="platform-grid">
         <div

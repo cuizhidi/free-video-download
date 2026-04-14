@@ -2,13 +2,166 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FreeVidGrab - 免费在线视频下载</title>
-    <meta name="description" content="免费在线视频下载工具，支持 YouTube、Bilibili、TikTok 等主流平台，极速解析，高清下载。" />
+
+    <!-- 核心 SEO 标签 -->
+    <title>SaveAny - 万能视频下载总结器 | 免费下载YouTube、Bilibili、抖音视频与AI智能总结</title>
+    <meta name="description" content="SaveAny 是一款免费的万能视频下载与AI智能总结工具，支持 YouTube、Bilibili、抖音、TikTok、Twitter/X、Instagram、小红书等1000+平台。一键解析视频链接，多种清晰度高清下载，AI自动生成视频摘要、章节大纲、知识要点和思维导图。立即免费使用！" />
+    <meta name="keywords" content="视频下载,在线视频下载,YouTube下载,B站视频下载,抖音视频下载,TikTok下载,AI视频总结,视频解析,免费视频下载工具,SaveAny" />
+
+    <!-- 爬虫控制 -->
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://maxczd.com/" />
+
+    <!-- Open Graph 标签（微信、Facebook 等社交分享） -->
+    <meta property="og:title" content="SaveAny - 万能视频下载总结器 | 免费下载与AI智能总结" />
+    <meta property="og:description" content="免费在线视频下载与AI智能总结工具，支持YouTube、Bilibili、抖音、TikTok等1000+平台，一键解析高清下载，AI自动生成摘要和思维导图。" />
+    <meta property="og:image" content="https://maxczd.com/og-share-image.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://maxczd.com/" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:site_name" content="SaveAny" />
+
+    <!-- Twitter Card 标签 -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SaveAny - 万能视频下载总结器" />
+    <meta name="twitter:description" content="免费在线视频下载与AI智能总结工具，支持1000+平台，一键高清下载，AI自动生成摘要。" />
+    <meta name="twitter:image" content="https://maxczd.com/og-share-image.png" />
+
+    <!-- Schema.org 基础标签 -->
+    <meta itemprop="name" content="SaveAny - 万能视频下载总结器" />
+    <meta itemprop="description" content="免费在线视频下载与AI智能总结工具，支持YouTube、Bilibili、抖音等1000+平台" />
+    <meta itemprop="image" content="https://maxczd.com/og-share-image.png" />
+
+    <!-- 移动端优化 -->
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="apple-mobile-web-app-title" content="SaveAny" />
+    <meta name="application-name" content="SaveAny" />
+
+    <!-- 网站图标 -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>" />
+
+    <!-- JSON-LD 结构化数据：WebApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "SaveAny",
+      "alternateName": "万能视频下载总结器",
+      "url": "https://maxczd.com/",
+      "description": "免费在线视频下载与AI智能总结工具，支持YouTube、Bilibili、抖音、TikTok等1000+平台，一键解析高清下载，AI自动生成摘要、章节大纲和思维导图。",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "CNY",
+        "description": "免费版，支持每日3次下载，最高720p画质"
+      },
+      "featureList": [
+        "支持1000+视频平台",
+        "YouTube视频下载",
+        "Bilibili视频下载",
+        "抖音视频下载",
+        "TikTok视频下载",
+        "多种清晰度选择（360p-4K）",
+        "AI视频内容摘要",
+        "AI章节大纲生成",
+        "AI关键知识点提取",
+        "AI思维导图生成",
+        "AI视频问答"
+      ],
+      "screenshot": "https://maxczd.com/og-share-image.png",
+      "softwareHelp": {
+        "@type": "WebPage",
+        "url": "https://maxczd.com/"
+      },
+      "creator": {
+        "@type": "Organization",
+        "name": "SaveAny",
+        "url": "https://maxczd.com/"
+      }
+    }
+    </script>
+
+    <!-- JSON-LD 结构化数据：FAQPage（增加富文本摘要展示机会） -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "SaveAny支持哪些视频平台？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "SaveAny基于强大的开源引擎，支持YouTube、Bilibili、抖音、TikTok、Twitter/X、Instagram、小红书、微博、Vimeo、Facebook、Twitch等1000+视频平台。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "SaveAny是免费的吗？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "是的，SaveAny提供免费版本，支持每日3次下载，最高720p画质。升级会员可享受无限次下载、4K原画画质、批量下载、音频提取等高级功能。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "SaveAny的AI智能总结功能是什么？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "SaveAny内置AI智能分析功能，可以自动为视频生成内容摘要、章节大纲、关键知识点提取、思维导图，还支持基于视频内容的AI问答，帮助你高效理解视频内容。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "如何使用SaveAny下载视频？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "只需三步：1. 复制视频链接粘贴到输入框；2. 点击解析按钮，系统自动识别平台并解析视频信息；3. 选择需要的画质和格式，点击下载即可保存视频。"
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="app"></div>
+
+    <!-- noscript 备用内容：为不支持 JS 的搜索引擎爬虫提供核心内容 -->
+    <noscript>
+      <div style="max-width:800px;margin:0 auto;padding:40px 20px;font-family:system-ui,sans-serif;">
+        <h1>SaveAny - 万能视频下载总结器</h1>
+        <p>SaveAny 是一款免费的万能视频下载与AI智能总结工具，支持 YouTube、Bilibili、抖音、TikTok、Twitter/X、Instagram、小红书等1000+视频平台。</p>
+
+        <h2>核心功能</h2>
+        <ul>
+          <li>极速解析：基于强大的开源引擎，秒级解析视频信息，支持1000+平台自动识别</li>
+          <li>多格式选择：自由选择画质与格式——从360p到4K超清，MP4/WebM任你挑选</li>
+          <li>AI智能总结：AI自动生成视频摘要、章节大纲、关键知识点和思维导图</li>
+          <li>AI视频问答：基于视频内容的多轮对话式AI问答</li>
+          <li>安全无忧：无需注册，不保留任何个人数据，下载文件30分钟后自动清理</li>
+          <li>全端适配：响应式设计，手机、平板、电脑均可流畅使用</li>
+        </ul>
+
+        <h2>支持平台</h2>
+        <p>YouTube、Bilibili、TikTok、抖音、Twitter/X、Instagram、小红书、微博、Vimeo、Facebook、Twitch 及更多1000+平台</p>
+
+        <h2>使用方法</h2>
+        <ol>
+          <li>复制视频链接粘贴到输入框</li>
+          <li>点击解析按钮，系统自动识别平台并解析视频信息</li>
+          <li>选择需要的画质和格式，点击下载即可保存视频</li>
+        </ol>
+
+        <p>请启用 JavaScript 以使用完整功能。</p>
+      </div>
+    </noscript>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

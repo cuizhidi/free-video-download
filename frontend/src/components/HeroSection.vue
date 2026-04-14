@@ -7,12 +7,12 @@
       </div>
 
       <h1 class="hero-title">
-        万能视频下载器，<span class="title-accent">一键保存</span>
+        万能视频下载总结器，<span class="title-accent">一键保存</span>
       </h1>
 
       <p class="hero-subtitle">
-        粘贴视频链接，智能解析，支持多种清晰度下载。YouTube、Bilibili、抖音、TikTok…<br />
-        随时随地，想下就下
+        粘贴视频链接，智能解析下载，AI自动总结视频内容。YouTube、Bilibili、抖音、TikTok…<br />
+        支持1000+平台，随时随地，想下就下
       </p>
 
       <div class="input-box">

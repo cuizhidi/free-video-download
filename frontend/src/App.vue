@@ -50,9 +50,10 @@
 
     <footer class="site-footer">
       <div class="container footer-inner">
-        <p>&copy; {{ new Date().getFullYear() }} SaveAny &mdash; 万能视频下载工具</p>
+        <p>&copy; {{ new Date().getFullYear() }} <a href="/" title="SaveAny 万能视频下载总结器">SaveAny</a> &mdash; 万能视频下载总结器</p>
         <p class="footer-disclaimer">
           本工具仅供个人学习和研究使用，请勿用于侵犯他人版权的行为。
+          <br />支持 YouTube、Bilibili、抖音、TikTok、Twitter/X、Instagram 等 1000+ 平台视频下载与 AI 智能总结。
         </p>
       </div>
     </footer>
@@ -207,9 +208,20 @@ function handleRetry() {
   color: var(--text-muted);
 }
 
+.footer-inner a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footer-inner a:hover {
+  color: var(--accent-blue);
+}
+
 .footer-disclaimer {
   margin-top: 4px;
   font-size: 12px;
+  line-height: 1.8;
 }
 
 .fade-enter-active,

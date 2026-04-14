@@ -1,11 +1,11 @@
 <template>
   <nav class="navbar">
     <div class="container nav-inner">
-      <div class="nav-brand">
-        <span class="brand-logo">▶</span>
+      <a href="/" class="nav-brand" title="SaveAny - 万能视频下载总结器">
+        <span class="brand-logo" role="img" aria-label="SaveAny">▶</span>
         <span class="brand-name">SaveAny</span>
-        <span class="brand-tag">万能视频下载</span>
-      </div>
+        <span class="brand-tag">万能视频下载总结器</span>
+      </a>
 
       <div class="nav-links" :class="{ open: mobileOpen }">
         <a href="#features" @click="mobileOpen = false">功能特性</a>
@@ -52,6 +52,8 @@ const mobileOpen = ref(false);
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  text-decoration: none;
+  color: inherit;
 }
 
 .brand-logo {
