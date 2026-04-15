@@ -26,6 +26,8 @@ frontend/dist-ssr/
 # ──── Project-specific ────
 backend/downloads/
 backend/logs/
+backend/data/
+*.db
 
 # ──── Environment ────
 .env

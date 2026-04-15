@@ -38,6 +38,8 @@ async def periodic_cleanup():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from database import init_db
+    init_db()
     task = asyncio.create_task(periodic_cleanup())
     yield
     task.cancel()
@@ -222,6 +224,20 @@ async def get_file(filename: str):
 
 from ai_routes import router as ai_router  # noqa: E402
 app.include_router(ai_router)
+
+from auth_routes import router as auth_router  # noqa: E402
+app.include_router(auth_router)
+
+from payment_routes import router as payment_router  # noqa: E402
+app.include_router(payment_router)
+
+
+@app.get("/api/config")
+async def get_public_config():
+    """Return non-secret config values needed by the frontend."""
+    return {
+        "stripe_publishable_key": os.getenv("STRIPE_PUBLISHABLE_KEY", ""),
+    }
 
 
 # ------------------------------------------------------------------

@@ -32,6 +32,7 @@
               <span class="price-amount pro-price">¥9.9</span>
               <span class="price-period">/月</span>
             </div>
+            <p class="plan-yearly-hint">年付 ¥99/年，省 ¥19.8</p>
           </div>
           <ul class="plan-features">
             <li v-for="f in proPlan" :key="f.text">
@@ -39,7 +40,9 @@
               {{ f.text }}
             </li>
           </ul>
-          <button class="btn-primary pro-btn" @click="handleUpgrade">立即升级</button>
+          <button class="btn-primary pro-btn" @click="handleUpgrade">
+            {{ isVip ? '已开通' : '立即升级' }}
+          </button>
         </div>
       </div>
     </div>
@@ -47,6 +50,11 @@
 </template>
 
 <script setup>
+import { useRouter } from "vue-router";
+import { isLoggedIn, isVip } from "../stores/auth.js";
+
+const router = useRouter();
+
 const freePlan = [
   { text: "每日 3 次下载", included: true },
   { text: "最高 720p 画质", included: true },
@@ -70,7 +78,11 @@ const proPlan = [
 ];
 
 function handleUpgrade() {
-  alert("会员系统即将上线，敬请期待！");
+  if (!isLoggedIn.value) {
+    router.push("/login?redirect=/checkout");
+  } else {
+    router.push("/checkout");
+  }
 }
 </script>
 
@@ -140,6 +152,13 @@ function handleUpgrade() {
   font-size: 14px;
   color: var(--text-muted);
   margin-left: 4px;
+}
+
+.plan-yearly-hint {
+  font-size: 12px;
+  color: var(--color-success);
+  margin-top: 4px;
+  font-weight: 500;
 }
 
 .plan-features {
