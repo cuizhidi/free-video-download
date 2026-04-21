@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import (
-    Boolean, Column, DateTime, ForeignKey, Integer, String,
+    Boolean, Column, Date, DateTime, ForeignKey, Integer, String, UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -79,3 +79,34 @@ class WebhookEvent(Base):
     event_type = Column(String, nullable=False)
     processed = Column(Boolean, default=False)
     created_at = Column(DateTime, default=_utcnow)
+
+
+class DownloadHistory(Base):
+    __tablename__ = "download_history"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    video_url = Column(String, nullable=False)
+    video_title = Column(String, nullable=False, default="")
+    thumbnail = Column(String, nullable=True)
+    platform = Column(String, nullable=True)
+    quality = Column(String, nullable=True)
+    filesize = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=_utcnow)
+
+    user = relationship("User")
+
+
+class UsageCounter(Base):
+    __tablename__ = "usage_counters"
+    __table_args__ = (
+        UniqueConstraint("user_id", "usage_type", "usage_date", name="uq_user_usage"),
+        UniqueConstraint("ip_address", "usage_type", "usage_date", name="uq_ip_usage"),
+    )
+
+    id = Column(String, primary_key=True, default=_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=True, index=True)
+    ip_address = Column(String, nullable=True)
+    usage_type = Column(String, nullable=False)
+    usage_date = Column(Date, nullable=False)
+    count = Column(Integer, default=0)

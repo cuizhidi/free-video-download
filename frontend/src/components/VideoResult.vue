@@ -77,6 +77,13 @@
             </label>
           </div>
 
+          <!-- VIP quality hint -->
+          <div v-if="qualityLimited" class="vip-quality-hint">
+            <span class="hint-icon">🔒</span>
+            <span>当前仅显示 720p 及以下画质，</span>
+            <router-link to="/checkout" class="hint-link">升级 VIP 解锁 1080p / 4K 原画</router-link>
+          </div>
+
           <!-- Download Button -->
           <div class="download-bar">
             <button
@@ -111,6 +118,7 @@ import { formatFileSize, formatDuration } from "../api/index.js";
 const props = defineProps({
   info: { type: Object, default: null },
   downloading: { type: Boolean, default: false },
+  qualityLimited: { type: Boolean, default: false },
 });
 const emit = defineEmits(["download"]);
 
@@ -368,6 +376,36 @@ function formatViews(n) {
 .format-sub {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+/* ---- VIP quality hint ---- */
+
+.vip-quality-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: #92400e;
+  margin-bottom: 12px;
+}
+
+.hint-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.hint-link {
+  color: var(--accent-blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.hint-link:hover {
+  text-decoration: underline;
 }
 
 /* ---- Download Bar ---- */

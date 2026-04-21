@@ -1,4 +1,13 @@
+import { getToken } from "../stores/auth.js";
+
 const API_BASE = "/api/ai";
+
+function _authHeaders() {
+  const t = getToken();
+  const h = {};
+  if (t) h["Authorization"] = `Bearer ${t}`;
+  return h;
+}
 
 /**
  * Check if AI service is available (DEEPSEEK_API_KEY configured).
@@ -6,6 +15,15 @@ const API_BASE = "/api/ai";
 export async function checkAIStatus() {
   const res = await fetch(`${API_BASE}/status`);
   if (!res.ok) return { available: false };
+  return res.json();
+}
+
+/**
+ * Fetch current AI analysis quota.
+ */
+export async function fetchAIQuota() {
+  const res = await fetch(`${API_BASE}/quota`, { headers: _authHeaders() });
+  if (!res.ok) return { used: 0, limit: 3, is_vip: false };
   return res.json();
 }
 
@@ -70,14 +88,18 @@ export function streamSummarize(params, { onChunk, onDone, onError }) {
 
   fetch(`${API_BASE}/summarize`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ..._authHeaders() },
     body: JSON.stringify(params),
     signal: controller.signal,
   })
     .then((res) => {
       if (!res.ok) {
         return res.json().then((err) => {
-          throw new Error(err?.detail?.error || "AI 总结请求失败");
+          const detail = err?.detail;
+          if (detail?.code === "QUOTA_EXCEEDED") {
+            throw new Error(detail.error);
+          }
+          throw new Error(detail?.error || "AI 总结请求失败");
         });
       }
       return _readSSE(res.body, { onChunk, onDone, onError });
@@ -103,14 +125,18 @@ export function streamChat(params, { onChunk, onDone, onError }) {
 
   fetch(`${API_BASE}/chat`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ..._authHeaders() },
     body: JSON.stringify(params),
     signal: controller.signal,
   })
     .then((res) => {
       if (!res.ok) {
         return res.json().then((err) => {
-          throw new Error(err?.detail?.error || "AI 问答请求失败");
+          const detail = err?.detail;
+          if (detail?.code === "QUOTA_EXCEEDED") {
+            throw new Error(detail.error);
+          }
+          throw new Error(detail?.error || "AI 问答请求失败");
         });
       }
       return _readSSE(res.body, { onChunk, onDone, onError });

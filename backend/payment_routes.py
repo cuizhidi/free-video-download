@@ -22,17 +22,10 @@ from models import Payment, Subscription, User, WebhookEvent
 
 router = APIRouter(prefix="/api/payment", tags=["payment"])
 
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
-WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
-MONTHLY_PRICE_ID = os.getenv("STRIPE_MONTHLY_PRICE_ID", "")
-YEARLY_PRICE_ID = os.getenv("STRIPE_YEARLY_PRICE_ID", "")
-APP_URL = os.getenv("APP_URL", "http://localhost:5173")
+def _cfg(key: str, default: str = "") -> str:
+    return os.getenv(key, default)
 
-PRICE_TO_PLAN = {}
-if MONTHLY_PRICE_ID:
-    PRICE_TO_PLAN[MONTHLY_PRICE_ID] = "monthly"
-if YEARLY_PRICE_ID:
-    PRICE_TO_PLAN[YEARLY_PRICE_ID] = "yearly"
+stripe.api_key = _cfg("STRIPE_SECRET_KEY")
 
 
 # --------------- Schemas ---------------
@@ -69,7 +62,14 @@ def _sync_subscription(sub_data, user_id: str, db: Session):
     """Create or update local subscription record from Stripe subscription object."""
     stripe_sub_id = sub_data["id"]
     price_id = sub_data["items"]["data"][0]["price"]["id"] if sub_data["items"]["data"] else ""
-    plan_type = PRICE_TO_PLAN.get(price_id, "unknown")
+    price_to_plan = {}
+    m = _cfg("STRIPE_MONTHLY_PRICE_ID")
+    y = _cfg("STRIPE_YEARLY_PRICE_ID")
+    if m:
+        price_to_plan[m] = "monthly"
+    if y:
+        price_to_plan[y] = "yearly"
+    plan_type = price_to_plan.get(price_id, "unknown")
 
     period_start = datetime.fromtimestamp(sub_data["current_period_start"], tz=timezone.utc)
     period_end = datetime.fromtimestamp(sub_data["current_period_end"], tz=timezone.utc)
@@ -119,9 +119,9 @@ def create_checkout_session(
     db: Session = Depends(get_db),
 ):
     if req.plan == "monthly":
-        price_id = MONTHLY_PRICE_ID
+        price_id = _cfg("STRIPE_MONTHLY_PRICE_ID")
     elif req.plan == "yearly":
-        price_id = YEARLY_PRICE_ID
+        price_id = _cfg("STRIPE_YEARLY_PRICE_ID")
     else:
         raise HTTPException(status_code=400, detail="无效的套餐类型")
 
@@ -137,14 +137,15 @@ def create_checkout_session(
     if active_sub:
         raise HTTPException(status_code=400, detail="你已有有效订阅，无需重复购买")
 
+    app_url = _cfg("APP_URL", "http://localhost:5173")
     try:
         session = stripe.checkout.Session.create(
             mode="subscription",
             customer=customer_id,
             client_reference_id=current_user.id,
             line_items=[{"price": price_id, "quantity": 1}],
-            ui_mode="embedded",
-            return_url=f"{APP_URL}/checkout/return?session_id={{CHECKOUT_SESSION_ID}}",
+            ui_mode="embedded_page",
+            return_url=f"{app_url}/checkout/return?session_id={{CHECKOUT_SESSION_ID}}",
             metadata={"user_id": current_user.id, "plan": req.plan},
         )
     except stripe.StripeError as e:
@@ -157,16 +158,19 @@ def create_checkout_session(
 def get_session_status(
     session_id: str,
     current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     try:
         session = stripe.checkout.Session.retrieve(session_id)
     except stripe.StripeError:
         raise HTTPException(status_code=404, detail="Session 不存在")
 
+    db.refresh(current_user)
     return {
         "status": session.status,
         "payment_status": session.payment_status,
         "customer_email": session.customer_details.email if session.customer_details else None,
+        "is_vip": current_user.is_vip,
     }
 
 
@@ -202,7 +206,7 @@ def create_portal_session(
     try:
         session = stripe.billing_portal.Session.create(
             customer=current_user.stripe_customer_id,
-            return_url=f"{APP_URL}/account",
+            return_url=f"{_cfg('APP_URL', 'http://localhost:5173')}/account",
         )
     except stripe.StripeError as e:
         raise HTTPException(status_code=502, detail=f"Stripe 错误: {e.user_message or str(e)}")
@@ -217,9 +221,10 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature", "")
 
-    if WEBHOOK_SECRET:
+    webhook_secret = _cfg("STRIPE_WEBHOOK_SECRET")
+    if webhook_secret:
         try:
-            event = stripe.Webhook.construct_event(payload, sig_header, WEBHOOK_SECRET)
+            event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid payload")
         except stripe.SignatureVerificationError:

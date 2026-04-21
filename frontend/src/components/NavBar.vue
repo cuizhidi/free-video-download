@@ -53,7 +53,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
-import { isLoggedIn, currentUser, isVip } from "../stores/auth.js";
+import { isLoggedIn, currentUser, isVip, refreshUser } from "../stores/auth.js";
 import { logout } from "../api/auth.js";
 
 const router = useRouter();
@@ -82,7 +82,10 @@ function onClickOutside(e) {
   }
 }
 
-onMounted(() => document.addEventListener("click", onClickOutside));
+onMounted(() => {
+  document.addEventListener("click", onClickOutside);
+  if (isLoggedIn.value) refreshUser();
+});
 onUnmounted(() => document.removeEventListener("click", onClickOutside));
 </script>
 

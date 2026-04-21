@@ -9,12 +9,15 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import urlparse
 
-from fastapi import FastAPI, Query, HTTPException
+import re
+
+from fastapi import FastAPI, Query, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from downloader import VideoDownloader, DOWNLOAD_DIR
+from deps import get_optional_user
 
 TEMP_FILE_MAX_AGE = 30 * 60  # 30 minutes
 
@@ -59,13 +62,31 @@ app.add_middleware(
 # API Routes
 # ------------------------------------------------------------------
 
+MAX_FREE_HEIGHT = 720
+
+
 @app.get("/api/parse")
-async def parse_video(url: str = Query(..., description="Video page URL")):
+async def parse_video(
+    url: str = Query(..., description="Video page URL"),
+    user=Depends(get_optional_user),
+):
     """Parse video info without downloading."""
     try:
         loop = asyncio.get_event_loop()
         info = await loop.run_in_executor(None, downloader.parse_video, url)
-        return {"success": True, "data": info}
+
+        is_vip = user and user.is_vip
+        quality_limited = False
+
+        if not is_vip and info.get("formats"):
+            original_count = len(info["formats"])
+            info["formats"] = [
+                f for f in info["formats"]
+                if int(re.sub(r"\D", "", f.get("quality", "0")) or "0") <= MAX_FREE_HEIGHT
+            ]
+            quality_limited = len(info["formats"]) < original_count
+
+        return {"success": True, "data": info, "quality_limited": quality_limited}
     except Exception as e:
         error_msg = str(e)
         lower_msg = error_msg.lower()
@@ -216,6 +237,45 @@ async def get_file(filename: str):
         filename=filename,
         media_type="application/octet-stream",
     )
+
+
+# ------------------------------------------------------------------
+# Download History (called by frontend after download completes)
+# ------------------------------------------------------------------
+
+from pydantic import BaseModel as _BM  # noqa: E402
+from deps import get_current_user  # noqa: E402
+from models import DownloadHistory  # noqa: E402
+from database import get_db  # noqa: E402
+
+
+class RecordDownloadRequest(_BM):
+    video_url: str
+    video_title: str = ""
+    thumbnail: str | None = None
+    platform: str | None = None
+    quality: str | None = None
+    filesize: int | None = None
+
+
+@app.post("/api/download-history")
+def record_download(
+    req: RecordDownloadRequest,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    entry = DownloadHistory(
+        user_id=user.id,
+        video_url=req.video_url,
+        video_title=req.video_title,
+        thumbnail=req.thumbnail,
+        platform=req.platform,
+        quality=req.quality,
+        filesize=req.filesize,
+    )
+    db.add(entry)
+    db.commit()
+    return {"status": "ok"}
 
 
 # ------------------------------------------------------------------

@@ -5,6 +5,7 @@
     <VideoResult
       :info="videoInfo"
       :downloading="downloading"
+      :quality-limited="qualityLimited"
       @download="handleDownload"
     />
 
@@ -31,6 +32,8 @@
 <script setup>
 import { ref, reactive, computed } from "vue";
 import { parseVideo, downloadVideo } from "../api/index.js";
+import { recordDownload } from "../api/auth.js";
+import { isLoggedIn } from "../stores/auth.js";
 import { useToast } from "../composables/useToast.js";
 
 import HeroSection from "../components/HeroSection.vue";
@@ -47,6 +50,7 @@ const { showToast } = useToast();
 const url = ref("");
 const parsing = ref(false);
 const videoInfo = ref(null);
+const qualityLimited = ref(false);
 const downloading = ref(false);
 let currentSSE = null;
 
@@ -81,12 +85,14 @@ async function handleParse(inputUrl) {
   if (parsing.value) return;
   parsing.value = true;
   videoInfo.value = null;
+  qualityLimited.value = false;
   resetProgress();
 
   try {
     const res = await parseVideo(inputUrl);
     if (res.success && res.data) {
       videoInfo.value = res.data;
+      qualityLimited.value = !!res.quality_limited;
     } else {
       showToast(res.error || "解析失败");
     }
@@ -124,6 +130,18 @@ function handleDownload(formatId) {
       progress.percent = 100;
       progress.filename = data.filename || "";
       showToast("下载完成！点击保存到本地", "success");
+      if (isLoggedIn.value && videoInfo.value) {
+        const vi = videoInfo.value;
+        const fmt = vi.formats?.find((f) => f.format_id === formatId);
+        recordDownload({
+          video_url: url.value,
+          video_title: vi.title || "",
+          thumbnail: vi.thumbnail || null,
+          platform: vi.platform?.name || null,
+          quality: fmt?.quality || null,
+          filesize: data.filesize || fmt?.filesize || null,
+        }).catch(() => {});
+      }
     },
     onError(data) {
       downloading.value = false;

@@ -14,22 +14,38 @@
             </span>
             <h3 class="ai-title">AI 智能分析</h3>
           </div>
-          <button
-            v-if="!started"
-            class="btn-primary ai-start-btn"
-            @click="startAnalysis"
-            :disabled="loading"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-              <polygon points="5,3 19,12 5,21"/>
-            </svg>
-            开始分析
-          </button>
-          <span v-else-if="loading" class="ai-status loading">
-            <span class="dot-loader"></span>
-            {{ statusText }}
-          </span>
-          <span v-else class="ai-status done">分析完成</span>
+          <div class="ai-header-right">
+            <span v-if="quota && !quota.is_vip && !quotaExceeded" class="quota-badge">
+              今日 {{ quota.used }}/{{ quota.limit }} 次
+            </span>
+            <span v-else-if="quota && quota.is_vip" class="quota-badge vip-quota">
+              VIP 无限次
+            </span>
+
+            <template v-if="quotaExceeded && !started">
+              <router-link to="/checkout" class="btn-primary ai-start-btn upgrade-btn">
+                升级 VIP 解锁无限分析
+              </router-link>
+            </template>
+            <template v-else>
+              <button
+                v-if="!started"
+                class="btn-primary ai-start-btn"
+                @click="startAnalysis"
+                :disabled="loading"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <polygon points="5,3 19,12 5,21"/>
+                </svg>
+                开始分析
+              </button>
+              <span v-else-if="loading" class="ai-status loading">
+                <span class="dot-loader"></span>
+                {{ statusText }}
+              </span>
+              <span v-else class="ai-status done">分析完成</span>
+            </template>
+          </div>
         </div>
 
         <!-- Tab Navigation (only shown after started) -->
@@ -94,8 +110,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from "vue";
-import { checkAIStatus, extractSubtitle, streamSummarize } from "../api/ai.js";
+import { ref, reactive, computed, onMounted } from "vue";
+import { checkAIStatus, extractSubtitle, streamSummarize, fetchAIQuota } from "../api/ai.js";
 
 import SummaryTab from "./SummaryTab.vue";
 import ChapterTab from "./ChapterTab.vue";
@@ -107,6 +123,17 @@ import AIChatTab from "./AIChatTab.vue";
 const props = defineProps({
   videoInfo: { type: Object, default: null },
   url: { type: String, default: "" },
+});
+
+const quota = ref(null);
+const quotaExceeded = computed(() =>
+  quota.value && !quota.value.is_vip && quota.value.used >= quota.value.limit
+);
+
+onMounted(async () => {
+  try {
+    quota.value = await fetchAIQuota();
+  } catch { /* ignore */ }
 });
 
 const tabs = [
@@ -175,10 +202,12 @@ async function startAnalysis() {
 
     phase.value = "summarize";
     await runSummarize();
+    fetchAIQuota().then((q) => (quota.value = q)).catch(() => {});
   } catch (e) {
     errorMsg.value = e.message || "分析失败";
     loading.value = false;
     subtitleLoading.value = false;
+    fetchAIQuota().then((q) => (quota.value = q)).catch(() => {});
   }
 }
 
@@ -310,6 +339,38 @@ function extractJSON(text) {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.ai-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quota-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.quota-badge.vip-quota {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.upgrade-btn {
+  text-decoration: none;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.upgrade-btn:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
 }
 
 .ai-icon {

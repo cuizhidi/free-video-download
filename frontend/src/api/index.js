@@ -1,8 +1,16 @@
+import { getToken } from "../stores/auth.js";
+
 const API_BASE = "/api";
+
+function _authHeaders() {
+  const t = getToken();
+  return t ? { Authorization: `Bearer ${t}` } : {};
+}
 
 export async function parseVideo(url) {
   const res = await fetch(
-    `${API_BASE}/parse?url=${encodeURIComponent(url)}`
+    `${API_BASE}/parse?url=${encodeURIComponent(url)}`,
+    { headers: _authHeaders() },
   );
   if (!res.ok) {
     const err = await res.json().catch(() => null);

@@ -1,8 +1,10 @@
 import os
 import re
+import uuid
+from pathlib import Path
 
 import jwt as pyjwt
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -16,7 +18,11 @@ from auth import (
 )
 from database import get_db
 from deps import get_current_user
-from models import User
+from models import User, DownloadHistory
+
+AVATAR_DIR = Path(__file__).parent / "data" / "avatars"
+AVATAR_DIR.mkdir(parents=True, exist_ok=True)
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -143,6 +149,75 @@ def refresh(req: RefreshRequest, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
     return _user_resp(current_user)
+
+
+@router.post("/avatar", response_model=UserResponse)
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail="仅支持 JPG/PNG/WebP/GIF 格式")
+    data = await file.read()
+    if len(data) > 2 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="图片大小不能超过 2MB")
+    ext = file.filename.rsplit(".", 1)[-1] if "." in (file.filename or "") else "jpg"
+    fname = f"{current_user.id}_{uuid.uuid4().hex[:8]}.{ext}"
+    (AVATAR_DIR / fname).write_bytes(data)
+    if current_user.avatar_url and current_user.avatar_url.startswith("/api/auth/avatar/"):
+        old_name = current_user.avatar_url.split("/")[-1]
+        old_path = AVATAR_DIR / old_name
+        if old_path.exists():
+            old_path.unlink(missing_ok=True)
+    current_user.avatar_url = f"/api/auth/avatar/{fname}"
+    db.commit()
+    db.refresh(current_user)
+    return _user_resp(current_user)
+
+
+@router.get("/avatar/{filename}")
+async def get_avatar(filename: str):
+    from fastapi.responses import FileResponse
+    filepath = AVATAR_DIR / filename
+    if not filepath.exists():
+        raise HTTPException(status_code=404, detail="头像不存在")
+    return FileResponse(str(filepath), headers={"Cache-Control": "public, max-age=86400"})
+
+
+@router.get("/download-history")
+def get_download_history(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    total = db.query(DownloadHistory).filter(
+        DownloadHistory.user_id == current_user.id
+    ).count()
+    items = db.query(DownloadHistory).filter(
+        DownloadHistory.user_id == current_user.id
+    ).order_by(DownloadHistory.created_at.desc()).offset(
+        (page - 1) * page_size
+    ).limit(page_size).all()
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "items": [
+            {
+                "id": h.id,
+                "video_url": h.video_url,
+                "video_title": h.video_title,
+                "thumbnail": h.thumbnail,
+                "platform": h.platform,
+                "quality": h.quality,
+                "filesize": h.filesize,
+                "created_at": h.created_at.isoformat() if h.created_at else "",
+            }
+            for h in items
+        ],
+    }
 
 
 # --------------- OAuth: shared helper ---------------

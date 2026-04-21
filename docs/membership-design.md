@@ -1,8 +1,9 @@
 # 会员订阅支付系统 - 方案设计文档
 
-> 版本：v1.0
+> 版本：v2.0
 > 创建日期：2026-04-16
-> 状态：已实现（Phase 1-4 全部完成）
+> 最后更新：2026-04-21
+> 状态：已实现（Phase 1-6 全部完成）
 
 ---
 
@@ -24,6 +25,12 @@
 | M-008 | 客户门户 | Stripe Customer Portal 管理订阅（升降级/取消/换卡） |
 | M-009 | 账户管理页 | 查看个人信息和订阅状态 |
 | M-010 | 路由守卫 | 认证保护页面 + 已登录跳过登录页 |
+| M-011 | VIP 状态持久化与展示 | 支付后轮询同步 VIP 状态，NavBar / 账户页实时显示 |
+| M-012 | 画质限制 | 免费用户最高 720p，VIP 用户解锁 4K 原画 |
+| M-013 | 字幕下载限制 | SRT/VTT 字幕文件下载仅限 VIP 用户 |
+| M-014 | AI 分析次数限制 | 免费用户每日 3 次，VIP 无限次（基于 UsageCounter） |
+| M-015 | 头像上传 | 支持 JPG/PNG/WebP/GIF，限制 2MB，本地文件存储 |
+| M-016 | 下载历史 | 记录并展示用户的视频下载历史，分页加载 |
 
 ### 1.2 技术选型
 
@@ -34,6 +41,7 @@
 | JWT | PyJWT | 轻量、主流、主动维护 |
 | 支付 | Stripe（stripe-python + @stripe/stripe-js） | 全球主流支付平台，API 设计优秀 |
 | OAuth | httpx + 手写实现 | 无需引入重量级框架（authlib 等） |
+| 文件上传 | python-multipart | FastAPI 文件上传依赖 |
 | 前端路由 | vue-router 4 | Vue 3 官方路由 |
 
 ---
@@ -83,21 +91,25 @@
 free-video-download/
 ├── backend/
 │   ├── database.py              # NEW: SQLAlchemy 引擎、Session、建表
-│   ├── models.py                # NEW: ORM 模型 (User, Subscription, Payment, WebhookEvent)
+│   ├── models.py                # NEW: ORM 模型 (User, Subscription, Payment, WebhookEvent, UsageCounter, DownloadHistory)
 │   ├── auth.py                  # NEW: JWT + bcrypt 工具函数
-│   ├── deps.py                  # NEW: FastAPI 依赖注入 (get_current_user 等)
-│   ├── auth_routes.py           # NEW: 认证路由 (注册/登录/OAuth)
+│   ├── deps.py                  # NEW: FastAPI 依赖注入 (get_current_user, require_vip, check_and_increment_usage 等)
+│   ├── auth_routes.py           # NEW: 认证路由 (注册/登录/OAuth/头像上传/下载历史)
 │   ├── oauth.py                 # NEW: Google/GitHub OAuth 工具
 │   ├── payment_routes.py        # NEW: Stripe 支付路由 (Checkout/Webhook)
-│   ├── app.py                   # MODIFIED: 注册新路由、初始化数据库
-│   ├── requirements.txt         # MODIFIED: +5 依赖
+│   ├── ai_routes.py             # MODIFIED: AI 分析添加用量限制
+│   ├── app.py                   # MODIFIED: 注册新路由、初始化数据库、画质限制、下载历史记录
+│   ├── data/avatars/            # NEW: 用户头像文件存储目录（自动创建，已 gitignore）
+│   ├── requirements.txt         # MODIFIED: +6 依赖
 │   └── .env.example             # MODIFIED: +JWT/Stripe/OAuth 配置
 ├── frontend/
 │   ├── src/
 │   │   ├── router/index.js      # NEW: Vue Router 配置 + 路由守卫
 │   │   ├── stores/auth.js       # NEW: 认证状态管理 (JWT + localStorage)
 │   │   ├── composables/useToast.js # NEW: 全局 Toast 通知
-│   │   ├── api/auth.js          # NEW: 认证 API 封装
+│   │   ├── api/auth.js          # NEW: 认证 API 封装 (含头像上传、下载历史、记录下载)
+│   │   ├── api/ai.js            # MODIFIED: AI API 添加认证头、配额查询、超限处理
+│   │   ├── api/index.js         # MODIFIED: parseVideo 添加认证头
 │   │   ├── api/payment.js       # NEW: 支付 API 封装
 │   │   ├── views/
 │   │   │   ├── HomeView.vue     # NEW: 首页 (从 App.vue 迁出)
@@ -106,12 +118,15 @@ free-video-download/
 │   │   │   ├── OAuthCallbackView.vue  # NEW: OAuth 回调处理
 │   │   │   ├── CheckoutView.vue       # NEW: 嵌入式支付页
 │   │   │   ├── CheckoutReturnView.vue # NEW: 支付完成页
-│   │   │   └── AccountView.vue        # NEW: 账户管理页
+│   │   │   └── AccountView.vue        # NEW+MODIFIED: 账户管理页 (VIP/免费标识、头像上传、下载历史)
 │   │   ├── App.vue              # MODIFIED: 重构为 router-view 布局
 │   │   ├── main.js              # MODIFIED: 挂载 router
 │   │   └── components/
-│   │       ├── NavBar.vue       # MODIFIED: 认证感知 (登录/用户菜单)
-│   │       └── PricingSection.vue # MODIFIED: 跳转支付页
+│   │       ├── NavBar.vue       # MODIFIED: 认证感知 + 自动刷新 VIP 状态
+│   │       ├── PricingSection.vue # MODIFIED: 跳转支付页 + VIP 已开通状态
+│   │       ├── VideoResult.vue  # MODIFIED: 非 VIP 画质限制提示
+│   │       ├── TranscriptTab.vue # MODIFIED: 字幕下载 VIP 门控
+│   │       └── AISummaryPanel.vue # MODIFIED: AI 分析次数配额显示
 │   └── package.json             # MODIFIED: +vue-router, @stripe/stripe-js
 └── docs/
     └── membership-design.md     # NEW: 本文档
@@ -131,30 +146,45 @@ free-video-download/
 │ email (UNIQUE)      │     │ id (PK, UUID)            │
 │ password_hash       │     │ stripe_subscription_id   │
 │ name                │     │ stripe_price_id          │
-│ avatar_url          │     │ plan_type                │
-│ auth_provider       │     │ status                   │
-│ auth_provider_id    │     │ current_period_start     │
-│ stripe_customer_id  │     │ current_period_end       │
-│ is_vip              │     │ cancel_at_period_end     │
-│ vip_expire_at       │     │ created_at / updated_at  │
-│ is_active           │     └─────────────────────────┘
-│ created_at          │
-│ updated_at          │     ┌─────────────────────────┐
-│                     │     │       payments            │
-│                     │◄────├─────────────────────────┤
-│                     │     │ id (PK, UUID)            │
-└─────────────────────┘     │ user_id (FK)             │
-                            │ stripe_payment_intent_id │
-                            │ stripe_invoice_id        │
-┌─────────────────────┐     │ amount (分)              │
-│   webhook_events    │     │ currency                 │
-├─────────────────────┤     │ status                   │
-│ id (PK, UUID)       │     │ created_at               │
-│ stripe_event_id     │     └─────────────────────────┘
-│ event_type          │
-│ processed           │
-│ created_at          │
-└─────────────────────┘
+│ avatar_url          │     │ plan_type / status        │
+│ auth_provider       │     │ current_period_start/end │
+│ auth_provider_id    │     │ cancel_at_period_end     │
+│ stripe_customer_id  │     │ created_at / updated_at  │
+│ is_vip              │     └─────────────────────────┘
+│ vip_expire_at       │
+│ is_active           │     ┌─────────────────────────┐
+│ created_at          │     │       payments            │
+│ updated_at          │◄────├─────────────────────────┤
+│                     │     │ user_id (FK)             │
+│                     │     │ stripe_payment_intent_id │
+└────────┬────────────┘     │ amount / currency        │
+         │                  │ status / created_at      │
+         │                  └─────────────────────────┘
+         │
+         │  ┌─────────────────────────┐
+         │  │   webhook_events        │
+         │  ├─────────────────────────┤
+         │  │ stripe_event_id (UQ)    │
+         │  │ event_type / processed  │
+         │  └─────────────────────────┘
+         │
+         ├──┌─────────────────────────┐
+         │  │   usage_counters        │
+         │  ├─────────────────────────┤
+         │  │ user_id (FK) / ip_addr  │
+         │  │ usage_type / usage_date │
+         │  │ count                   │
+         │  └─────────────────────────┘
+         │
+         └──┌─────────────────────────┐
+            │   download_history      │
+            ├─────────────────────────┤
+            │ user_id (FK)            │
+            │ video_url / video_title │
+            │ thumbnail / platform    │
+            │ quality / filesize      │
+            │ created_at              │
+            └─────────────────────────┘
 ```
 
 ### 3.2 字段说明
@@ -215,6 +245,33 @@ free-video-download/
 | processed | BOOLEAN | DEFAULT FALSE | 是否已处理 |
 | created_at | DATETIME | | 接收时间 |
 
+#### usage_counters 表（功能用量限制）
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| id | TEXT (UUID) | PK | 记录 ID |
+| user_id | TEXT | FK → users.id, NULLABLE | 登录用户关联（未登录时为 NULL） |
+| ip_address | TEXT | NULLABLE | 未登录用户以 IP 追踪 |
+| usage_type | TEXT | NOT NULL | 用量类型（如 `ai_analysis`） |
+| usage_date | DATE | NOT NULL | 日期（按天重置） |
+| count | INTEGER | DEFAULT 0 | 当日已使用次数 |
+
+> 唯一约束：`UQ(user_id, usage_type, usage_date)` + `UQ(ip_address, usage_type, usage_date)`
+
+#### download_history 表（下载历史记录）
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| id | TEXT (UUID) | PK | 记录 ID |
+| user_id | TEXT | FK → users.id, INDEX | 关联用户 |
+| video_url | TEXT | NOT NULL | 视频原始 URL |
+| video_title | TEXT | NOT NULL | 视频标题 |
+| thumbnail | TEXT | NULLABLE | 缩略图 URL |
+| platform | TEXT | NULLABLE | 来源平台（YouTube、Bilibili 等） |
+| quality | TEXT | NULLABLE | 下载画质 |
+| filesize | INTEGER | NULLABLE | 文件大小（字节） |
+| created_at | DATETIME | | 下载时间 |
+
 ---
 
 ## 四、API 接口设计
@@ -231,6 +288,9 @@ free-video-download/
 | GET | /api/auth/google/callback | 无 | Google OAuth 回调，重定向前端并携带 JWT |
 | GET | /api/auth/github | 无 | 重定向到 GitHub 授权页 |
 | GET | /api/auth/github/callback | 无 | GitHub OAuth 回调，重定向前端并携带 JWT |
+| POST | /api/auth/avatar | Bearer | 上传用户头像（multipart/form-data），返回更新后用户信息 |
+| GET | /api/auth/avatar/{filename} | 无 | 获取头像文件（静态资源） |
+| GET | /api/auth/download-history | Bearer | 获取下载历史（分页：page, page_size） |
 
 ### 4.2 支付接口 (/api/payment)
 
@@ -242,7 +302,17 @@ free-video-download/
 | POST | /api/payment/create-portal-session | Bearer | 创建 Stripe 客户门户会话 |
 | POST | /api/payment/webhook | 无（签名验证） | Stripe Webhook 回调 |
 
-### 4.3 配置接口
+### 4.3 功能限制接口
+
+| 方法 | 路径 | 认证 | 说明 |
+|------|------|------|------|
+| GET | /api/parse | 可选 Bearer | 解析视频（非 VIP 过滤 >720p 格式，返回 quality_limited 标志） |
+| POST | /api/download-history | Bearer | 前端下载完成后记录下载历史 |
+| GET | /api/ai/quota | 可选 Bearer | 查询当前用户/IP 的 AI 分析剩余配额 |
+| POST | /api/ai/summarize | 可选 Bearer | AI 摘要（非 VIP 每日 3 次限制） |
+| POST | /api/ai/chat | 可选 Bearer | AI 对话（非 VIP 每日 3 次限制，与摘要共享配额） |
+
+### 4.4 配置接口
 
 | 方法 | 路径 | 认证 | 说明 |
 |------|------|------|------|
@@ -480,11 +550,25 @@ STRIPE_API_BASE=http://localhost:8420
 | Phase 2 | Google/GitHub OAuth 登录 | ✅ 已完成 |
 | Phase 3 | Stripe 嵌入式 Checkout + Webhook + 订阅管理 | ✅ 已完成 |
 | Phase 4 | VIP 权限控制 + NavBar 打通 + 账户管理页 | ✅ 已完成 |
+| Phase 5 | VIP 状态持久化 + 功能权限差异（画质/字幕/AI 限制） | ✅ 已完成 |
+| Phase 6 | 用户中心完善（头像上传 + 下载历史 + 信息面板重构） | ✅ 已完成 |
+
+### Phase 5 详细记录
+
+- **VIP 状态同步**：支付完成后前端轮询 `refreshUser()` 最多 5 次（间隔 2s），NavBar 挂载时自动刷新
+- **画质限制**：后端 `/api/parse` 过滤 >720p 格式，前端显示 "升级 VIP 解锁 1080p / 4K 原画" 提示
+- **字幕下载**：前端 `TranscriptTab` 对非 VIP 用户显示锁定按钮并引导升级
+- **AI 分析配额**：后端 `UsageCounter` 按天计数，免费 3 次/天，VIP 无限；前端显示配额徽章，超限后按钮变为升级引导
+
+### Phase 6 详细记录
+
+- **头像上传**：`POST /api/auth/avatar` 接收 multipart 文件，限 JPG/PNG/WebP/GIF、2MB，存储在 `backend/data/avatars/`
+- **下载历史**：`DownloadHistory` 模型 + 分页查询接口；前端下载完成后自动调用 `recordDownload()` 记录
+- **账户页重构**：个人信息卡片（可点击上传头像 + VIP/免费标识 + 到期时间 + 注册时间）、会员订阅卡片、下载历史卡片（缩略图 + 元数据 + 分页加载）
 
 ### 后续可扩展方向
 
-- 下载次数配额限制（免费 3 次/天 vs VIP 无限）
-- 画质限制（免费 720p vs VIP 4K）
 - 优惠券/促销码支持
 - 邮件通知（续费成功/失败提醒）
-- 用户下载历史记录
+- 下载次数配额限制（当前仅限制 AI 分析次数）
+- 多语言 / 国际化支持

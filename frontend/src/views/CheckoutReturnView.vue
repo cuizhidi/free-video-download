@@ -27,14 +27,17 @@
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { getSessionStatus } from "../api/payment.js";
-import { updateUser } from "../stores/auth.js";
-import { fetchMe } from "../api/auth.js";
+import { refreshUser } from "../stores/auth.js";
 
 const route = useRoute();
 
 const loading = ref(true);
 const status = ref("");
 const message = ref("");
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
 
 onMounted(async () => {
   const sessionId = route.query.session_id;
@@ -50,10 +53,11 @@ onMounted(async () => {
     status.value = data.status;
 
     if (data.status === "complete") {
-      try {
-        const user = await fetchMe();
-        updateUser(user);
-      } catch { /* ignore */ }
+      for (let i = 0; i < 5; i++) {
+        const user = await refreshUser();
+        if (user?.is_vip) break;
+        await sleep(2000);
+      }
     }
   } catch (e) {
     status.value = "error";

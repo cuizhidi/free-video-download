@@ -109,7 +109,7 @@ async function handleCheckout() {
 
     await new Promise((r) => setTimeout(r, 50));
 
-    const result = await stripe.initEmbeddedCheckout({ clientSecret: clientSecret.value });
+    const result = await stripe.createEmbeddedCheckoutPage({ clientSecret: clientSecret.value });
     checkoutInstance = result;
     result.mount("#checkout-embed");
   } catch (e) {

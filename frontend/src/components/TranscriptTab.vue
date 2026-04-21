@@ -9,12 +9,22 @@
         {{ language }}
       </span>
       <div class="download-actions">
-        <button type="button" class="dl-btn" @click="downloadSrt" title="下载 SRT 字幕文件">
-          下载 SRT
-        </button>
-        <button type="button" class="dl-btn" @click="downloadVtt" title="下载 WebVTT 字幕文件">
-          下载 VTT
-        </button>
+        <template v-if="isVip">
+          <button type="button" class="dl-btn" @click="downloadSrt" title="下载 SRT 字幕文件">
+            下载 SRT
+          </button>
+          <button type="button" class="dl-btn" @click="downloadVtt" title="下载 WebVTT 字幕文件">
+            下载 VTT
+          </button>
+        </template>
+        <template v-else>
+          <router-link to="/checkout" class="dl-btn dl-btn-locked" title="VIP 专属功能">
+            🔒 下载 SRT
+          </router-link>
+          <router-link to="/checkout" class="dl-btn dl-btn-locked" title="VIP 专属功能">
+            🔒 下载 VTT
+          </router-link>
+        </template>
       </div>
       <div class="search-box">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
@@ -57,6 +67,7 @@
 
 <script setup>
 import { ref, computed } from "vue";
+import { isVip } from "../stores/auth.js";
 import {
   segmentsToSrt,
   segmentsToVtt,
@@ -175,6 +186,18 @@ function downloadVtt() {
   border-color: var(--accent-blue-border);
   color: var(--accent-blue);
   background: var(--accent-blue-light);
+}
+
+.dl-btn-locked {
+  text-decoration: none;
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+.dl-btn-locked:hover {
+  border-color: #f59e0b;
+  color: #92400e;
+  background: #fffbeb;
 }
 
 .meta-badge {

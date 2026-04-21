@@ -1,4 +1,5 @@
 import { reactive, computed } from "vue";
+import { fetchMe } from "../api/auth.js";
 
 const TOKEN_KEY = "sv_access_token";
 const REFRESH_KEY = "sv_refresh_token";
@@ -43,4 +44,15 @@ export function getToken() {
 
 export function getRefreshToken() {
   return state.refreshToken;
+}
+
+export async function refreshUser() {
+  if (!state.token) return null;
+  try {
+    const user = await fetchMe();
+    updateUser(user);
+    return user;
+  } catch {
+    return null;
+  }
 }

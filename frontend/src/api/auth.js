@@ -51,3 +51,38 @@ export async function refreshToken() {
 export function logout() {
   clearAuth();
 }
+
+export async function uploadAvatar(file) {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_BASE}/avatar`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.detail || "头像上传失败");
+  }
+  return res.json();
+}
+
+export async function fetchDownloadHistory(page = 1, pageSize = 20) {
+  return request(`${API_BASE}/download-history?page=${page}&page_size=${pageSize}`);
+}
+
+export async function recordDownload(data) {
+  const token = getToken();
+  if (!token) return;
+  const res = await fetch("/api/download-history", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.ok;
+}
